@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Mila_sladco — Авторские торты & корпусные пирожные в Москве</title>
+  <meta name="description" content="Витрина кондитерской Mila_sladco. Авторские корпусные пирожные, бенто-торты и подарочные наборы с доставкой по Москве." />
+  
+  <!-- Favicon / Touch Icon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍰</text></svg>" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Верхняя строка управления (для удобного просмотра на ноутбуках и десктопах) -->
+  <header class="desktop-bar">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="badge-mode">Mila_sladco Preview</span>
+      <span>Интерактивный мобильный прототип</span>
+    </div>
+    <button id="btn-toggle-wide" class="btn-toggle-wide">💻 Широкий экран</button>
+  </header>
+
+  <!-- Основной контейнер веб-приложения -->
+  <main class="app-container">
+    
+    <!-- Переключатель экранов: Мультиссылка (Taplink) vs Каталог -->
+    <nav class="nav-pills" aria-label="Разделы витрины">
+      <button class="nav-pill-btn active" data-tab="taplink">
+        <span>🔗</span> Мультиссылка
+      </button>
+      <button class="nav-pill-btn" data-tab="showcase">
+        <span>🍰</span> Каталог десертов
+      </button>
+    </nav>
+
+    <!-- ========================================================
+         ЭКРАН 1: ТАПЛИНК / МУЛЬТИССЫЛКА
+         ======================================================== -->
+    <section id="view-taplink" class="screen-view active">
+      
+      <!-- Шапка кондитера -->
+      <div class="profile-header">
+        <div class="avatar-wrapper">
+          <img src="assets/images/chef-mila.jpg" alt="Кондитер Люда Mila_sladco" class="avatar-img" />
+          <div class="avatar-badge" title="Кондитер сейчас на связи"></div>
+        </div>
+
+        <h1 class="profile-title">Mila_sladco</h1>
+        <p class="profile-tagline">Авторские торты & корпусные пирожные • Москва</p>
+
+        <div>
+          <span class="status-chip">
+            <span class="status-dot"></span> Принимаем заказы на сегодня и предзаказы
+          </span>
+        </div>
+
+        <div class="usp-chips">
+          <span class="usp-item">✨ 100% ручная работа</span>
+          <span class="usp-item">🌿 Натуральный шоколад Callebaut</span>
+          <span class="usp-item">🚚 Доставка по Москве</span>
+        </div>
+      </div>
+
+      <!-- Кнопки быстрых действий -->
+      <div class="taplink-actions">
+        
+        <!-- Кнопка 1: Написать в MAX -->
+        <a href="https://max.ru/mila_sladco" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-max">
+          <div class="taplink-btn-content">
+            <div class="taplink-icon">💬</div>
+            <div>
+              <div class="taplink-text-title">Написать в MAX</div>
+              <div class="taplink-text-sub">Быстрый ответ кондитера Люды в чате</div>
+            </div>
+          </div>
+          <span class="taplink-arrow">›</span>
+        </a>
+
+        <!-- Кнопка 2: Telegram-канал -->
+        <a href="https://t.me/mila_sladco_cakes" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-telegram">
+          <div class="taplink-btn-content">
+            <div class="taplink-icon">📢</div>
+            <div>
+              <div class="taplink-text-title">Наш Telegram-канал</div>
+              <div class="taplink-text-sub">Анонсы вкусов, закулисье и отзывы</div>
+            </div>
+          </div>
+          <span class="taplink-arrow">›</span>
+        </a>
+
+        <!-- Кнопка 3: Открыть витрину десертов -->
+        <button type="button" class="taplink-btn btn-showcase" onclick="switchTab('showcase')">
+          <div class="taplink-btn-content">
+            <div class="taplink-icon">🍰</div>
+            <div>
+              <div class="taplink-text-title">Каталог десертов</div>
+              <div class="taplink-text-sub">Выбрать пирожные, состав и оформить заказ</div>
+            </div>
+          </div>
+          <span class="taplink-arrow">›</span>
+        </button>
+
+        <!-- Кнопка 4: Срочный заказ / Звонок -->
+        <a href="tel:+79268801414" class="taplink-btn btn-urgent">
+          <div class="taplink-btn-content">
+            <div class="taplink-icon">📞</div>
+            <div>
+              <div class="taplink-text-title">Срочный заказ / Позвонить</div>
+              <div class="taplink-text-sub">Если праздник уже сегодня: +7 (926) 880-14-14</div>
+            </div>
+          </div>
+          <span class="taplink-arrow">›</span>
+        </a>
+
+      </div>
+
+      <!-- Виджет: Сегодня на витрине -->
+      <div class="taplink-showcase-preview">
+        <div class="section-head">
+          <h2 class="section-title">Хиты этой недели</h2>
+          <button type="button" class="section-link" onclick="switchTab('showcase')">Все вкусы →</button>
+        </div>
+        <div id="taplink-hits" class="preview-scroll">
+          <!-- Заполняется из app.js -->
+        </div>
+      </div>
+
+      <!-- Блок информации о доставке -->
+      <div style="padding: 0 20px; font-size: 12px; color: var(--color-muted); text-align: center; line-height: 1.6;">
+        <p>📍 Москва, м. Раменки (самовывоз по предзаказу)</p>
+        <p>🚗 Доставка курьером сервисов Яндекс.Доставка / Достависта</p>
+        <p style="margin-top: 8px; font-weight: 600;">© Mila_sladco • Сделано с любовью к десертам</p>
+      </div>
+
+    </section>
+
+    <!-- ========================================================
+         ЭКРАН 2: ВИТРИНА / КАТАЛОГ ДЕСЕРТОВ
+         ======================================================== -->
+    <section id="view-showcase" class="screen-view">
+      
+      <div class="catalog-header">
+        <h2 class="catalog-header-title">Витрина десертов</h2>
+        <p class="catalog-header-desc">
+          Корпусные пирожные с глянцевой глазурью, нежные муссы и авторские бенто-торты
+        </p>
+      </div>
+
+      <!-- Горизонтальные фильтры категорий -->
+      <div id="category-filters" class="category-filters">
+        <!-- Генерируется из app.js -->
+      </div>
+
+      <!-- Сетка товаров -->
+      <div id="products-grid" class="products-grid">
+        <!-- Карточки генерируются из app.js -->
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================================
+       ПЛАВАЮЩАЯ ПЛАШКА КОРЗИНЫ (FLOATING BAR)
+       ======================================================== -->
+  <aside id="floating-cart" class="floating-cart-bar" onclick="openCart()" aria-label="Открыть корзину">
+    <div class="cart-bar-left">
+      <span id="cart-badge-count" class="cart-badge-count">0 шт</span>
+      <span class="cart-bar-text">Корзина заказа</span>
+    </div>
+    <div class="cart-bar-right">
+      <span id="cart-badge-price">0 ₽</span>
+      <span>›</span>
+    </div>
+  </aside>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: ДЕТАЛЬНАЯ КАРТОЧКА ДЕСЕРТА
+       ======================================================== -->
+  <div id="product-modal" class="modal-overlay" onclick="closeProductModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      <button type="button" class="sheet-close-btn" onclick="closeProductModal()" aria-label="Закрыть">✕</button>
+
+      <div class="detail-img-wrap">
+        <img id="detail-modal-img" src="" alt="" class="detail-img" />
+      </div>
+
+      <div class="modal-detail-content">
+        <div class="detail-info">
+          <div class="detail-header-row">
+            <h3 id="detail-modal-title" class="detail-title">Название десерта</h3>
+            <span id="detail-modal-price" class="detail-price">450 ₽</span>
+          </div>
+          <div id="detail-modal-weight" class="detail-weight">Вес: 110 г</div>
+
+          <p id="detail-modal-desc" class="detail-desc">Описание десерта</p>
+
+          <!-- Слои пирожного -->
+          <div id="detail-layers-wrap">
+            <h4 class="detail-section-title">Слои и текстура десерта:</h4>
+            <ul id="detail-modal-layers" class="detail-layers-list"></ul>
+          </div>
+
+          <!-- КБЖУ на 100 грамм -->
+          <h4 class="detail-section-title">Пищевая ценность (на 100 г):</h4>
+          <div class="nutrition-grid">
+            <div class="nutrition-item">
+              <div id="nutr-cal" class="val">285</div>
+              <div class="lbl">ккал</div>
+            </div>
+            <div class="nutrition-item">
+              <div id="nutr-prot" class="val">4.2 г</div>
+              <div class="lbl">белки</div>
+            </div>
+            <div class="nutrition-item">
+              <div id="nutr-fat" class="val">14.8 г</div>
+              <div class="lbl">жиры</div>
+            </div>
+            <div class="nutrition-item">
+              <div id="nutr-carb" class="val">33.5 г</div>
+              <div class="lbl">углеводы</div>
+            </div>
+          </div>
+
+          <!-- Состав -->
+          <h4 class="detail-section-title">Натуральный состав:</h4>
+          <p id="detail-modal-ingredients" style="font-size: 12px; color: var(--color-muted); line-height: 1.5; margin-bottom: 16px;"></p>
+
+          <!-- Действия: количество и кнопка добавления -->
+          <div class="detail-actions">
+            <div id="detail-qty-counter" class="qty-counter">
+              <button type="button" class="qty-btn" onclick="changeDetailQty(-1)">−</button>
+              <span id="detail-qty-val" class="qty-val">1</span>
+              <button type="button" class="qty-btn" onclick="changeDetailQty(1)">+</button>
+            </div>
+            <button id="btn-detail-add" type="button" class="btn-detail-add" onclick="addDetailToCart()">
+              <span id="btn-detail-add-text">Добавить в корзину • 450 ₽</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: КОРЗИНА И ОФОРМЛЕНИЕ ЗАКАЗА
+       ======================================================== -->
+  <div id="cart-modal" class="modal-overlay" onclick="closeCart()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      <button type="button" class="sheet-close-btn" onclick="closeCart()" aria-label="Закрыть">✕</button>
+
+      <div class="cart-sheet-content">
+        <h3 class="cart-title">Ваш сладкий заказ</h3>
+
+        <!-- Пустая корзина -->
+        <div id="cart-empty-state" class="cart-empty-state">
+          <div class="cart-empty-icon">🍰</div>
+          <p style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Ваша корзина пока пуста</p>
+          <p style="font-size: 13px;">Выберите аппетитные корпусные пирожные или подарочный набор в витрине!</p>
+        </div>
+
+        <!-- Список добавленных десертов -->
+        <div id="cart-items-list" class="cart-items-list">
+          <!-- Генерируется из app.js -->
+        </div>
+
+        <!-- Форма оформления заказа -->
+        <div id="checkout-box" class="checkout-box">
+          <div class="checkout-box-title">
+            <span>📝</span> Детали для доставки
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="order-name">Ваше имя *</label>
+            <input type="text" id="order-name" class="form-input" placeholder="Например: Анастасия" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="order-phone">Телефон или ник для связи *</label>
+            <input type="text" id="order-phone" class="form-input" placeholder="+7 (999) 000-00-00 или @username" required />
+          </div>
+
+          <!-- Выбор канала связи -->
+          <div class="form-group">
+            <label class="form-label">Куда отправить заказ кондитеру?</label>
+            <div class="messenger-selector">
+              <label class="messenger-option selected" data-type="max">
+                <input type="radio" name="order-messenger" value="max" checked />
+                <span>💬 В MAX</span>
+              </label>
+              <label class="messenger-option" data-type="telegram">
+                <input type="radio" name="order-messenger" value="telegram" />
+                <span>✈️ В Telegram</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="order-date">Дата готовности</label>
+              <input type="date" id="order-date" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="order-time">Время (приблизительно)</label>
+              <select id="order-time" class="form-select">
+                <option value="11:00 - 14:00">11:00 - 14:00</option>
+                <option value="14:00 - 18:00" selected>14:00 - 18:00</option>
+                <option value="18:00 - 21:00">18:00 - 21:00</option>
+                <option value="Срочно сегодня">Срочно сегодня</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="order-delivery">Способ получения</label>
+            <select id="order-delivery" class="form-select" onchange="document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none'">
+              <option value="delivery" selected>🚚 Доставка курьером (Москва и МО)</option>
+              <option value="pickup">🚶 Самовывоз (м. Раменки)</option>
+            </select>
+          </div>
+
+          <div id="address-group" class="form-group">
+            <label class="form-label" for="order-address">Адрес доставки</label>
+            <input type="text" id="order-address" class="form-input" placeholder="Улица, дом, квартира/офис" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="order-comment">Пожелания / надпись на торте или открытке</label>
+            <textarea id="order-comment" class="form-textarea" rows="2" placeholder="Например: надпись «С Днём Рождения!», открытка с пожеланием или без сахара"></textarea>
+          </div>
+        </div>
+
+        <!-- Итоговая сумма -->
+        <div id="cart-summary" class="cart-summary">
+          <span style="font-weight: 600; color: var(--color-muted);">Сумма заказа:</span>
+          <span id="cart-total-price" class="cart-summary-total">0 ₽</span>
+        </div>
+
+        <!-- Кнопка отправки -->
+        <button id="btn-send-order" type="button" class="btn-send-order max-style" onclick="submitOrder()">
+          💬 Отправить заказ в MAX
+        </button>
+
+        <p class="order-hint">
+          ✨ Заказ сразу откроется в вашем диалоге с кондитером Людой со всеми деталями.
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: БЕЗОПАСНЫЙ ВВОД PIN-КОДА
+       ======================================================== -->
+  <div id="pin-modal" class="modal-overlay" onclick="AdminPanel.closePinModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      <button type="button" class="sheet-close-btn" onclick="AdminPanel.closePinModal()" aria-label="Закрыть">✕</button>
+
+      <div class="pin-sheet-content">
+        <div class="pin-icon-wrap">🔐</div>
+        <h3 class="pin-title">Кабинет кондитера</h3>
+        <p class="pin-desc">Доступ только для Люды. Введите секретный PIN-код:</p>
+        
+        <div id="pin-error-box" class="pin-error-box"></div>
+
+        <div>
+          <input type="password" id="pin-input-field" class="pin-input" maxlength="6" placeholder="••••" 
+            onkeydown="if(event.key==='Enter') AdminPanel.submitPin()" />
+        </div>
+
+        <button type="button" class="btn-send-order max-style" style="margin-top: 14px;" onclick="AdminPanel.submitPin()">
+          Войти в кабинет
+        </button>
+
+        <p style="font-size: 11px; color: var(--color-muted); margin-top: 14px;">
+          🔒 Защищено от перебора. По умолчанию: последние 4 цифры телефона (1414).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: КАБИНЕТ КОНДИТЕРА ЛЮДЫ
+       ======================================================== -->
+  <div id="admin-modal" class="modal-overlay" onclick="AdminPanel.close()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      <button type="button" class="sheet-close-btn" onclick="AdminPanel.close()" aria-label="Закрыть">✕</button>
+
+      <div style="padding: 0 20px 28px;">
+        <div class="admin-header-box">
+          <h3 class="admin-sheet-title">👩‍🍳 Кабинет Люды</h3>
+          <button type="button" class="btn-admin-action btn-admin-logout" onclick="AdminPanel.logout()" title="Выйти из режима">
+            🔒 Выйти
+          </button>
+        </div>
+
+        <div class="admin-top-actions">
+          <button type="button" class="btn-admin-primary" onclick="AdminPanel.openAddNew()">
+            <span>✨</span> + Добавить десерт
+          </button>
+          <button type="button" class="btn-admin-secondary" onclick="AdminPanel.exportBackup()" title="Сохранить резервную копию меню">
+            💾 Скачать меню
+          </button>
+          <button type="button" class="btn-admin-secondary" onclick="AdminPanel.promptChangePin()" title="Изменить PIN-код">
+            🔑 Сменить PIN
+          </button>
+          <button type="button" class="btn-admin-secondary" onclick="AdminPanel.resetDefaults()" style="color: #C92A2A;" title="Сбросить к исходным">
+            🔄 Сброс
+          </button>
+        </div>
+
+        <p style="font-size: 12px; color: var(--color-muted); margin-bottom: 12px;">
+          💡 Здесь вы можете прямо с телефона менять цены, скрывать закончившиеся десерты («Закончился») и добавлять свои фото.
+        </p>
+
+        <!-- Список товаров для управления -->
+        <div id="admin-products-list" class="admin-list">
+          <!-- Генерируется из admin.js -->
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: ФОРМА РЕДАКТИРОВАНИЯ / ДОБАВЛЕНИЯ ДЕСЕРТА
+       ======================================================== -->
+  <div id="admin-edit-modal" class="modal-overlay" onclick="AdminPanel.closeEditModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      <button type="button" class="sheet-close-btn" onclick="AdminPanel.closeEditModal()" aria-label="Закрыть">✕</button>
+
+      <div style="padding: 0 20px 32px;">
+        <h3 id="edit-modal-title" class="admin-sheet-title" style="margin-bottom: 16px;">Редактирование десерта</h3>
+
+        <!-- Загрузка фото десерта -->
+        <div class="form-group">
+          <label class="form-label">Фотография десерта (из галереи телефона или камера)</label>
+          <div class="upload-preview-box">
+            <img id="form-edit-preview-img" src="assets/images/mango-passion.jpg" alt="Превью" class="preview-thumb-large" />
+            <div>
+              <label class="file-input-btn">
+                📸 Выбрать фото
+                <input type="file" accept="image/*" style="display: none;" onchange="AdminPanel.handleImageUpload(this)" />
+              </label>
+              <input type="hidden" id="form-edit-image-url" value="" />
+              <div style="font-size: 11px; color: var(--color-muted); margin-top: 6px;">
+                Поддерживаются JPG, PNG с любого смартфона
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="form-edit-title">Название десерта *</label>
+          <input type="text" id="form-edit-title" class="form-input" placeholder="Например: Малиновый тарт" required />
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="form-edit-price">Цена (в рублях) *</label>
+            <input type="number" id="form-edit-price" class="form-input" placeholder="450" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="form-edit-weight">Вес десерта</label>
+            <input type="text" id="form-edit-weight" class="form-input" placeholder="115 г" />
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="form-edit-cat">Категория</label>
+            <select id="form-edit-cat" class="form-select">
+              <option value="pastry">Корпусные пирожные</option>
+              <option value="boxes">Подарочные наборы</option>
+              <option value="bento">Бенто-торты</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="form-edit-badge">Бейдж на карточке</label>
+            <input type="text" id="form-edit-badge" class="form-input" placeholder="Хит / Новинка" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="form-edit-desc">Краткое описание вкуса и начинки</label>
+          <textarea id="form-edit-desc" class="form-textarea" rows="2" placeholder="Опишите текстуру, мусс и бисквит..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="form-edit-ingredients">Натуральный состав</label>
+          <textarea id="form-edit-ingredients" class="form-textarea" rows="2" placeholder="Сливки 33%, бельгийский шоколад, пюре ягод..."></textarea>
+        </div>
+
+        <button type="button" class="btn-send-order max-style" style="margin-top: 16px;" onclick="AdminPanel.saveProductForm()">
+          💾 Сохранить изменения
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Всплывающий Toast -->
+  <div id="toast-msg" class="toast-msg"></div>
+
+  <!-- Scripts (подключение модулей архитектуры) -->
+  <script src="js/catalog-manager.js"></script>
+  <script src="js/auth-security.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
