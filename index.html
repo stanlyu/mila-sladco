@@ -68,19 +68,19 @@
       <div class="taplink-actions">
         
         <!-- Кнопка 1: Написать в MAX -->
-        <a href="https://max.ru/mila_sladco" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-max">
+        <a id="link-btn-max" href="https://max.ru/mila_sladco" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-max">
           <div class="taplink-btn-content">
             <div class="taplink-icon">💬</div>
             <div>
               <div class="taplink-text-title">Написать в MAX</div>
-              <div class="taplink-text-sub">Быстрый ответ кондитера Люды в чате</div>
+              <div id="link-sub-max" class="taplink-text-sub">Быстрый ответ кондитера в чате</div>
             </div>
           </div>
           <span class="taplink-arrow">›</span>
         </a>
 
         <!-- Кнопка 2: Telegram-канал -->
-        <a href="https://t.me/mila_sladco_cakes" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-telegram">
+        <a id="link-btn-telegram" href="https://t.me/mila_sladco_cakes" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-telegram">
           <div class="taplink-btn-content">
             <div class="taplink-icon">📢</div>
             <div>
@@ -103,13 +103,13 @@
           <span class="taplink-arrow">›</span>
         </button>
 
-        <!-- Кнопка 4: Срочный заказ / Звонок -->
-        <a href="tel:+79153181819" class="taplink-btn btn-urgent">
+        <!-- Кнопка 4: Срочный заказ / Звонок (скрыта по умолчанию для защиты от спам-ботов) -->
+        <a id="link-btn-phone" href="tel:+79153181819" class="taplink-btn btn-urgent" style="display: none;">
           <div class="taplink-btn-content">
             <div class="taplink-icon">📞</div>
             <div>
               <div class="taplink-text-title">Срочный заказ / Позвонить</div>
-              <div class="taplink-text-sub">Если праздник уже сегодня: +7 (915) 318-18-19</div>
+              <div id="link-sub-phone" class="taplink-text-sub">Если праздник уже сегодня: +7 (915) 318-18-19</div>
             </div>
           </div>
           <span class="taplink-arrow">›</span>
@@ -450,6 +450,13 @@
             <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('pin', this)" aria-label="Подсказка">?</button>
           </div>
 
+          <div style="display: inline-flex; align-items: center; gap: 4px;">
+            <button type="button" class="btn-admin-secondary" onclick="AdminPanel.openContactsModal()" title="Настройки ссылок и телефона">
+              📱 Контакты & ссылки
+            </button>
+            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('contacts', this)" aria-label="Подсказка">?</button>
+          </div>
+
           <button type="button" class="btn-admin-secondary" onclick="AdminPanel.resetDefaults()" style="color: #C92A2A;" title="Сбросить к исходным">
             🔄 Сброс
           </button>
@@ -560,6 +567,67 @@
     </div>
     <div id="tooltip-popover-text" class="tooltip-popover-text">Текст подсказки</div>
     <button type="button" class="tooltip-popover-btn" onclick="AdminPanel.hideBubble()">Понятно, спасибо!</button>
+  </div>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: НАСТРОЙКИ КОНТАКТОВ И МЕССЕНДЖЕРОВ
+       ======================================================== -->
+  <div id="contacts-modal" class="modal-overlay" onclick="AdminPanel.closeContactsModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      <button type="button" class="sheet-close-btn" onclick="AdminPanel.closeContactsModal()" aria-label="Закрыть">✕</button>
+
+      <div style="padding: 0 20px 32px;">
+        <h3 class="admin-sheet-title" style="margin-bottom: 8px;">📱 Контакты и мессенджеры</h3>
+        <p style="font-size: 12px; color: var(--color-muted); margin-bottom: 16px;">
+          Укажите свои ссылки для тестов или реальные контакты кондитерской.
+        </p>
+
+        <!-- Telegram username -->
+        <div class="form-group">
+          <label class="form-label" for="setting-tg-user">Логин в Telegram (куда отправлять заказы)</label>
+          <input type="text" id="setting-tg-user" class="form-input" placeholder="например: stanlyu или @stanlyu" />
+          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px;">
+            💡 Укажите свой личный логин на время тестов, чтобы сообщения приходили вам, а не Люде.
+          </div>
+        </div>
+
+        <!-- Telegram channel -->
+        <div class="form-group">
+          <label class="form-label" for="setting-tg-channel">Ссылка на Telegram-канал (кнопка в шапке)</label>
+          <input type="text" id="setting-tg-channel" class="form-input" placeholder="https://t.me/mila_sladco_cakes" />
+        </div>
+
+        <!-- MAX username -->
+        <div class="form-group">
+          <label class="form-label" for="setting-max-user">Логин в MAX Messenger</label>
+          <input type="text" id="setting-max-user" class="form-input" placeholder="например: mila_sladco" />
+        </div>
+
+        <!-- Телефон -->
+        <div class="form-group">
+          <label class="form-label" for="setting-phone">Контактный номер телефона</label>
+          <input type="tel" id="setting-phone" class="form-input" placeholder="+7 (915) 318-18-19" />
+        </div>
+
+        <!-- Защита от спам-ботов -->
+        <div class="form-group" style="background: #FAF7F2; padding: 12px; border-radius: 12px; border: 1px solid var(--color-border); margin-top: 10px;">
+          <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
+            <input type="checkbox" id="setting-show-phone" style="width: 20px; height: 20px; margin-top: 2px;" />
+            <div>
+              <div>Показывать кнопку звонка на главной странице</div>
+              <div style="font-size: 11px; color: var(--color-muted); font-weight: normal; margin-top: 3px; line-height: 1.4;">
+                🛡️ <b>Защита от спам-ботов</b>: если выключить, личный номер телефона будет скрыт от автосборщиков в интернете. Покупатели смогут безопасно писать только в чаты MAX и Telegram.
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <button type="button" class="btn-send-order max-style" style="margin-top: 16px;" onclick="AdminPanel.saveContacts()">
+          💾 Сохранить контакты
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ========================================================

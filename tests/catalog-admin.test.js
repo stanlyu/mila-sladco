@@ -134,3 +134,35 @@ test("CatalogManager: Люда может обновить аватарку ше
   assert.strictEqual(CatalogManager.getProfile().avatar, "assets/images/chef-mila.jpg");
 });
 
+test("CatalogManager: обновление контактов, мессенджеров и тумблера защиты от спам-ботов", () => {
+  CatalogManager.init();
+
+  // По умолчанию номер телефона скрыт для защиты от ботов
+  const defaultProf = CatalogManager.getProfile();
+  assert.strictEqual(defaultProf.showPhone, false);
+  assert.strictEqual(defaultProf.phone, "+7 (915) 318-18-19");
+  assert.strictEqual(defaultProf.telegramUsername, "mila_sladco");
+  assert.strictEqual(defaultProf.maxUsername, "mila_sladco");
+
+  // Пользователь настраивает свои контакты для тестов
+  CatalogManager.updateProfile({
+    telegramUsername: "test_tester",
+    maxUsername: "test_tester_max",
+    telegramChannelUrl: "https://t.me/test_channel",
+    showPhone: true,
+    phone: "+7 (999) 000-00-00",
+    phoneClean: "+79990000000"
+  });
+
+  const updated = CatalogManager.getProfile();
+  assert.strictEqual(updated.telegramUsername, "test_tester");
+  assert.strictEqual(updated.maxUsername, "test_tester_max");
+  assert.strictEqual(updated.showPhone, true);
+  assert.strictEqual(updated.phone, "+7 (999) 000-00-00");
+  assert.strictEqual(updated.phoneClean, "+79990000000");
+
+  // Сброс
+  CatalogManager.resetProfile();
+  assert.strictEqual(CatalogManager.getProfile().showPhone, false);
+});
+

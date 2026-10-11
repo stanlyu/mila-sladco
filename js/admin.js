@@ -387,6 +387,63 @@ const AdminPanel = {
   },
 
   // ==========================================
+  // Управление контактами и ссылками
+  // ==========================================
+  openContactsModal() {
+    const modal = document.getElementById("contacts-modal");
+    if (!modal) return;
+    const profile = CatalogManager.getProfile() || {};
+    const tgUser = document.getElementById("setting-tg-user");
+    const tgChan = document.getElementById("setting-tg-channel");
+    const maxUser = document.getElementById("setting-max-user");
+    const phoneInput = document.getElementById("setting-phone");
+    const showPhoneCheckbox = document.getElementById("setting-show-phone");
+
+    if (tgUser) tgUser.value = profile.telegramUsername || "mila_sladco";
+    if (tgChan) tgChan.value = profile.telegramChannelUrl || "https://t.me/mila_sladco_cakes";
+    if (maxUser) maxUser.value = profile.maxUsername || "mila_sladco";
+    if (phoneInput) phoneInput.value = profile.phone || "+7 (915) 318-18-19";
+    if (showPhoneCheckbox) showPhoneCheckbox.checked = Boolean(profile.showPhone);
+
+    modal.classList.add("open");
+  },
+
+  closeContactsModal() {
+    const modal = document.getElementById("contacts-modal");
+    if (modal) modal.classList.remove("open");
+  },
+
+  saveContacts() {
+    const tgUser = document.getElementById("setting-tg-user");
+    const tgChan = document.getElementById("setting-tg-channel");
+    const maxUser = document.getElementById("setting-max-user");
+    const phoneInput = document.getElementById("setting-phone");
+    const showPhoneCheckbox = document.getElementById("setting-show-phone");
+
+    const cleanTg = (tgUser ? tgUser.value.trim() : "").replace(/^@/, "");
+    const tgChannel = tgChan ? tgChan.value.trim() : "";
+    const maxLogin = (maxUser ? maxUser.value.trim() : "").replace(/^@/, "");
+    const phoneVal = phoneInput ? phoneInput.value.trim() : "+7 (915) 318-18-19";
+    const cleanDigits = phoneVal.replace(/[^\d+]/g, "");
+    const showPhone = showPhoneCheckbox ? showPhoneCheckbox.checked : false;
+
+    CatalogManager.updateProfile({
+      telegramUsername: cleanTg || "mila_sladco",
+      telegramChannelUrl: tgChannel || "https://t.me/mila_sladco_cakes",
+      maxUsername: maxLogin || "mila_sladco",
+      phone: phoneVal,
+      phoneClean: cleanDigits.startsWith("+") ? cleanDigits : ("+" + cleanDigits),
+      showPhone: showPhone
+    });
+
+    this.closeContactsModal();
+    if (typeof renderProfile === "function") {
+      renderProfile();
+    }
+    showToast("Контакты и настройки ссылок обновлены! 📱✨");
+  },
+
+  // ==========================================
   // Обучающий тур для Люды (Tour Slider)
   // ==========================================
   currentTourSlide: 1,
@@ -494,6 +551,10 @@ const AdminPanel = {
       status: {
         title: "🚦 Наличие десерта",
         text: "«В наличии» — клиенты могут заказать. «Закончился» — десерт останется на витрине, но с пометкой, и положить его в корзину будет нельзя."
+      },
+      contacts: {
+        title: "📱 Контакты и мессенджеры",
+        text: "Здесь вы можете изменить логин Telegram, канал, логин MAX Messenger, телефон, а также включить или выключить показ номера телефона на сайте для защиты от спам-ботов."
       }
     };
 

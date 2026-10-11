@@ -237,6 +237,10 @@ const DEFAULT_PROFILE = {
   statusText: "Принимаем заказы на сегодня и предзаказы",
   phone: "+7 (915) 318-18-19",
   phoneClean: "+79153181819",
+  showPhone: false,
+  telegramUsername: "mila_sladco",
+  telegramChannelUrl: "https://t.me/mila_sladco_cakes",
+  maxUsername: "mila_sladco",
   hasSeenTour: false
 };
 

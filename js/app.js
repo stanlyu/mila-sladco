@@ -387,13 +387,19 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast("Формируем заказ и открываем чат...");
 
     setTimeout(() => {
+      const profile = (typeof CatalogManager !== "undefined" && CatalogManager.getProfile) 
+        ? CatalogManager.getProfile() 
+        : {};
+
       if (selectedMessenger === "telegram") {
+        const tgUser = (profile && profile.telegramUsername) || SHOP_INFO.telegramUsername;
         const encodedText = encodeURIComponent(orderText);
-        const tgUrl = `https://t.me/${SHOP_INFO.telegramUsername}?text=${encodedText}`;
+        const tgUrl = `https://t.me/${tgUser}?text=${encodedText}`;
         window.open(tgUrl, "_blank");
       } else {
+        const maxUser = (profile && profile.maxUsername) || SHOP_INFO.maxUsername;
         const encodedText = encodeURIComponent(orderText);
-        const maxUrl = `https://max.ru/${SHOP_INFO.maxUsername}?message=${encodedText}`;
+        const maxUrl = `https://max.ru/${maxUser}?message=${encodedText}`;
         window.open(maxUrl, "_blank");
       }
 
@@ -414,7 +420,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 2800);
   };
 
-  // Рендеринг профиля шефа (аватарка и статус)
+  // Рендеринг профиля шефа (аватарка, статус, ссылки и телефон)
   function renderProfile() {
     const profile = CatalogManager.getProfile();
     if (!profile) return;
@@ -422,8 +428,32 @@ document.addEventListener("DOMContentLoaded", () => {
     if (avatarImg && profile.avatar) {
       avatarImg.src = profile.avatar;
     }
+
+    // Ссылки и кнопки в таплинке
+    const maxBtn = document.getElementById("link-btn-max");
+    if (maxBtn && profile.maxUsername) {
+      maxBtn.href = `https://max.ru/${profile.maxUsername}`;
+    }
+
+    const tgBtn = document.getElementById("link-btn-telegram");
+    if (tgBtn && profile.telegramChannelUrl) {
+      tgBtn.href = profile.telegramChannelUrl;
+    }
+
+    const phoneBtn = document.getElementById("link-btn-phone");
+    const phoneSub = document.getElementById("link-sub-phone");
+    if (phoneBtn) {
+      phoneBtn.style.display = profile.showPhone ? "flex" : "none";
+      if (profile.phoneClean || profile.phone) {
+        phoneBtn.href = `tel:${profile.phoneClean || profile.phone}`;
+      }
+    }
+    if (phoneSub && profile.phone) {
+      phoneSub.textContent = `Если праздник уже сегодня: ${profile.phone}`;
+    }
   }
 
+  window.renderProfile = renderProfile;
   document.addEventListener("profile:updated", renderProfile);
 
   // Первоначальный рендер
