@@ -391,6 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
       time,
       deliveryType,
       address,
+      pickupAddress: (profile.pickupAddress || "Москва, м. Раменки").trim(),
       comment,
       messenger: selectedMessenger
     };
@@ -438,7 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cleanTg = rawTg.replace(/^https?:\/\/t\.me\//i, "").replace(/^t\.me\//i, "").replace(/^@/, "").trim();
 
     const rawMax = (profile.maxUsername || "").trim();
-    const cleanMax = rawMax.replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "").replace(/[\s\-\(\)]/g, "");
+    const cleanMax = rawMax.replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "").trim();
 
     const targetUser = selectedMessenger === "telegram" ? cleanTg : cleanMax;
 
@@ -459,7 +460,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const encodedText = encodeURIComponent(orderText);
       messengerUrl = `https://t.me/${cleanTg}?text=${encodedText}`;
     } else {
-      const encodedText = encodeURIComponent(orderText);
       let baseMax = rawMax;
       if (!/^https?:\/\//i.test(baseMax)) {
         if (/^(u|join)\//i.test(baseMax)) {
@@ -468,8 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
           baseMax = `https://max.ru/u/${baseMax}`;
         }
       }
-      const sep = baseMax.includes("?") ? "&" : "?";
-      messengerUrl = `${baseMax}${sep}message=${encodedText}`;
+      messengerUrl = baseMax;
     }
 
     currentMessengerUrl = messengerUrl;
@@ -487,7 +486,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (mainFlow) mainFlow.style.display = "none";
     if (successScreen) successScreen.style.display = "block";
     if (msgHint) {
-      msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>${selectedMessenger === "telegram" ? "Telegram" : "MAX"}</b>.<br />Нажмите <b>«Отправить»</b> в открывшемся чате.`;
+      if (selectedMessenger === "telegram") {
+        msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>Telegram</b>.<br />Нажмите <b>«Отправить»</b> в открывшемся чате.`;
+      } else {
+        msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>MAX</b>.<br />Чек скопирован в буфер обмена: просто <b>вставьте</b> его в поле сообщения и нажмите <b>«Отправить»</b>.`;
+      }
     }
     showToast("Заказ сформирован! Чек открыт в чате 💌", 3500);
   };
@@ -515,6 +518,14 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => customInput.focus(), 100);
       }
     }
+  };
+
+  // Переключение способа доставки (доставка / самовывоз)
+  window.toggleDeliveryType = (val) => {
+    const addressGroup = document.getElementById("address-group");
+    const pickupGroup = document.getElementById("pickup-group");
+    if (addressGroup) addressGroup.style.display = val === "delivery" ? "block" : "none";
+    if (pickupGroup) pickupGroup.style.display = val === "pickup" ? "block" : "none";
   };
 
   // Toast с настраиваемой длительностью (по умолчанию 3.5 - 4 секунды)
@@ -651,6 +662,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (phoneSub && profile.phone) {
       phoneSub.textContent = `Если праздник уже сегодня: ${profile.phone}`;
+    }
+
+    // Подсказка адреса самовывоза в корзине
+    const pickupHint = document.getElementById("cart-pickup-address-hint");
+    if (pickupHint) {
+      pickupHint.textContent = profile.pickupAddress || "Москва, м. Раменки";
+    }
+    const pickupOpt = document.getElementById("order-delivery-pickup-opt");
+    if (pickupOpt) {
+      pickupOpt.textContent = `🚶 Самовывоз (${profile.pickupAddress || "м. Раменки"})`;
     }
   }
 

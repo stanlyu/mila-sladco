@@ -355,15 +355,21 @@
 
               <div class="form-group">
                 <label class="form-label" for="order-delivery">Способ получения</label>
-                <select id="order-delivery" class="form-select" onchange="document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none'">
+                <select id="order-delivery" class="form-select" onchange="toggleDeliveryType(this.value)">
                   <option value="delivery" selected>🚚 Доставка курьером (Москва и МО)</option>
-                  <option value="pickup">🚶 Самовывоз (м. Раменки)</option>
+                  <option value="pickup" id="order-delivery-pickup-opt">🚶 Самовывоз (м. Раменки)</option>
                 </select>
               </div>
 
               <div id="address-group" class="form-group">
                 <label class="form-label" for="order-address">Адрес доставки</label>
                 <input type="text" id="order-address" class="form-input" placeholder="Улица, дом, квартира/офис" />
+              </div>
+
+              <div id="pickup-group" class="form-group" style="display: none;">
+                <div style="font-size: 12px; color: var(--color-primary); background: #FAF7F2; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--color-border); line-height: 1.4;">
+                  📍 <b>Адрес для самовывоза:</b> <span id="cart-pickup-address-hint">Москва, м. Раменки</span>
+                </div>
               </div>
 
               <div class="form-group">
@@ -574,11 +580,11 @@
             </div>
           </div>
 
-          <!-- Панель статуса облачной синхронизации с GitHub -->
+          <!-- Панель статуса синхронизации данных -->
           <div class="admin-sync-bar" id="admin-sync-bar">
             <div class="admin-sync-status">
               <span class="sync-dot" id="sync-status-dot"></span>
-              <span id="sync-status-text">🟢 Все изменения опубликованы на GitHub</span>
+              <span id="sync-status-text">🟢 Все изменения опубликованы на сайте</span>
             </div>
             <button type="button" id="btn-admin-publish" class="btn-admin-publish" onclick="AdminPanel.manualPublish()" title="Опубликовать изменения для клиентов">
               🚀 Опубликовать
@@ -711,8 +717,9 @@
             Настройте, куда клиенты отправляют заказы и где читают ваши новости.
           </p>
           <div class="tour-slide-steps">
-            <div>✈️ <b>Telegram:</b> укажите ваш никнейм (например, <b>stan_lyu</b>) для приёма заказов в личный диалог.</div>
+            <div>✈️ <b>Telegram:</b> укажите ваш никнейм (например, <b>mila_sladco</b>) для приёма заказов в личный диалог.</div>
             <div>💬 <b>MAX Messenger:</b> вставьте вашу ссылку-приглашение из приложения MAX (<i>Настройки ➔ Пригласить друзей ➔ Скопировать ссылку</i>).</div>
+            <div>📍 <b>Адрес самовывоза:</b> укажите, откуда клиентам забирать заказы (он отобразится в корзине и чеке).</div>
             <div>📢 <b>Каналы кондитерской:</b> подключите ссылки на ваши каналы анонсов в Telegram и MAX.</div>
             <div>🔒 <b>Защита от спама:</b> телефон можно скрыть от ботов на сайте, оставив связь только через чаты.</div>
           </div>
@@ -839,7 +846,7 @@
                 <input type="checkbox" id="setting-show-tg-direct" style="width: 18px; height: 18px;" />
                 <span>✈️ Кнопка «Написать в Telegram»</span>
               </label>
-              <input type="text" id="setting-tg-user" class="form-input" placeholder="Ник в Telegram, например: stan_lyu" />
+              <input type="text" id="setting-tg-user" class="form-input" placeholder="Ник в Telegram, например: mila_sladco" />
               <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
                 💡 Ваш @username в Telegram (без знака @), куда клиент напишет в один клик.
               </div>
@@ -852,8 +859,25 @@
                 <span>💬 Кнопка «Написать в MAX»</span>
               </label>
               <input type="text" id="setting-max-user" class="form-input" placeholder="Ссылка из MAX: https://max.ru/u/..." />
+              <div style="font-size: 11px; color: #6D4C41; background: #FFF8E6; padding: 10px 12px; border-radius: 10px; border: 1px solid #FFE29A; margin-top: 8px; line-height: 1.5;">
+                <div style="font-weight: 700; margin-bottom: 4px; color: #8D5B10;">💡 Где скопировать вашу персональную ссылку в MAX:</div>
+                <div style="margin-bottom: 3px;">📱 <b>В мобильном приложении MAX:</b> откройте <i>«Настройки» (шестерёнка) ➔ «Пригласить друзей» ➔ «Скопировать ссылку»</i>.</div>
+                <div>💻 <b>В десктопном приложении / на компьютере:</b> откройте профиль / настройки ➔ нажмите <i>«Скопировать ссылку»</i>.</div>
+                <div style="margin-top: 4px; font-size: 10.5px; color: #9A6700;">Ссылка имеет вид <code>https://max.ru/u/...</code> — вставьте её сюда целиком. По ней клиенты сразу попадают в личный диалог с вами.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- СЕКЦИЯ: АДРЕС САМОВЫВОЗА -->
+          <div style="background: #FDFBF8; border: 1px solid var(--color-border); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+            <div style="font-weight: 700; font-size: 13px; color: var(--color-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span>📍</span> Адрес для самовывоза заказов
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="setting-pickup-address">Точный адрес или ориентир для клиентов</label>
+              <input type="text" id="setting-pickup-address" class="form-input" placeholder="Москва, м. Раменки, Мичуринский проспект" />
               <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
-                💡 Скопируйте ссылку в приложении MAX (Настройки → Пригласить друзей) и вставьте сюда.
+                💡 Этот адрес автоматически отобразится в корзине при выборе «Самовывоз» и попадет в готовый чек заказа.
               </div>
             </div>
           </div>

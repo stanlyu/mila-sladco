@@ -162,12 +162,12 @@ const AdminPanel = {
       if (message) {
         text.textContent = message;
       } else if (state === "syncing") {
-        text.textContent = "⏳ Публикация на GitHub...";
+        text.textContent = "⏳ Публикация на сайт...";
       } else if (state === "pending") {
         text.textContent = "⚠️ Есть несохранённые изменения";
       } else {
         const timeStr = this.lastPublishedTime ? ` (${this.lastPublishedTime})` : "";
-        text.textContent = `🟢 Все изменения опубликованы на GitHub${timeStr}`;
+        text.textContent = `🟢 Все изменения опубликованы на сайте${timeStr}`;
       }
     }
 
@@ -195,7 +195,7 @@ const AdminPanel = {
           this.setSyncState("synced");
           return true;
         } else {
-          this.setSyncState("pending", "⚠️ Ошибка связи с GitHub");
+          this.setSyncState("pending", "⚠️ Ошибка связи с сервером");
           return false;
         }
       } catch (e) {
@@ -212,10 +212,10 @@ const AdminPanel = {
 
   async manualPublish() {
     if (this.isSyncing) return;
-    showToast("Публикуем изменения на GitHub... 🚀");
+    showToast("Публикуем изменения на сайт... 🚀");
     const ok = await this.syncToCloud();
     if (ok) {
-      showToast("🎉 Все изменения успешно опубликованы на GitHub! Клиенты видят обновленный сайт.", 4500);
+      showToast("🎉 Все изменения успешно опубликованы! Клиенты видят обновленный сайт.", 4500);
     } else {
       showToast("Не удалось опубликовать. Проверьте интернет-соединение.", 4000);
     }
@@ -681,6 +681,7 @@ const AdminPanel = {
     const tgChan = document.getElementById("setting-tg-channel");
     const maxUser = document.getElementById("setting-max-user");
     const maxChan = document.getElementById("setting-max-channel");
+    const pickupInput = document.getElementById("setting-pickup-address");
     const phoneInput = document.getElementById("setting-phone");
     const showPhoneCheckbox = document.getElementById("setting-show-phone");
 
@@ -693,6 +694,7 @@ const AdminPanel = {
     if (tgChan) tgChan.value = profile.telegramChannelUrl || "";
     if (maxUser) maxUser.value = profile.maxUsername || "";
     if (maxChan) maxChan.value = profile.maxChannelUrl || "";
+    if (pickupInput) pickupInput.value = profile.pickupAddress || "Москва, м. Раменки";
     if (phoneInput) phoneInput.value = profile.phone || "+7 (915) 318-18-19";
     if (showPhoneCheckbox) showPhoneCheckbox.checked = Boolean(profile.showPhone);
 
@@ -714,6 +716,7 @@ const AdminPanel = {
     const tgChan = document.getElementById("setting-tg-channel");
     const maxUser = document.getElementById("setting-max-user");
     const maxChan = document.getElementById("setting-max-channel");
+    const pickupInput = document.getElementById("setting-pickup-address");
     const phoneInput = document.getElementById("setting-phone");
     const showPhoneCheckbox = document.getElementById("setting-show-phone");
 
@@ -726,6 +729,7 @@ const AdminPanel = {
     const tgChannel = tgChan ? tgChan.value.trim() : "";
     const maxLogin = (maxUser ? maxUser.value.trim() : "").replace(/^@/, "");
     const maxChannel = maxChan ? maxChan.value.trim() : "";
+    const pickupVal = (pickupInput && pickupInput.value.trim()) ? pickupInput.value.trim() : "Москва, м. Раменки";
     const phoneVal = phoneInput ? phoneInput.value.trim() : "+7 (915) 318-18-19";
     const cleanDigits = phoneVal.replace(/[^\d+]/g, "");
     const showPhone = showPhoneCheckbox ? showPhoneCheckbox.checked : false;
@@ -740,6 +744,7 @@ const AdminPanel = {
       telegramChannelUrl: tgChannel,
       maxUsername: maxLogin,
       maxChannelUrl: maxChannel,
+      pickupAddress: pickupVal,
       showTelegramDirect: showTgDirect,
       showMaxDirect: showMaxDirect,
       showTelegramChannel: showTgChannel,

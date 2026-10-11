@@ -247,7 +247,8 @@ const DEFAULT_PROFILE = {
   showTelegramChannel: true,
   showMaxChannel: false,
   hasSeenTour: false,
-  pinHash: "2052782898"
+  pinHash: "2052782898",
+  pickupAddress: "Москва, м. Раменки"
 };
 
 const CatalogManager = {

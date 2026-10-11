@@ -102,7 +102,7 @@ test("AdminPanel: ручная публикация сбрасывает фла�
 
   assert.strictEqual(AdminPanel.hasUnpublishedChanges, false);
   const textEl = getMockElement("sync-status-text");
-  assert.ok(textEl.textContent.includes("🟢 Все изменения опубликованы на GitHub"));
+  assert.ok(textEl.textContent.includes("🟢 Все изменения опубликованы на сайте"));
   const barEl = getMockElement("admin-sync-bar");
   assert.strictEqual(barEl.classList.contains("has-pending"), false);
 });

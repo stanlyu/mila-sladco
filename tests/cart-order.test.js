@@ -96,6 +96,22 @@ test("Cart: генерация читаемого заказа для MAX и Tel
   assert.ok(orderText.includes("MAX"));
 });
 
+test("Cart: генерация заказа с кастомным адресом самовывоза", () => {
+  Cart.clear();
+  Cart.addItem("mango-passion", 1);
+
+  const orderText = Cart.generateOrderText({
+    name: "Анастасия",
+    phone: "+7 999 222-33-44",
+    deliveryType: "pickup",
+    pickupAddress: "Москва, м. Раменки, Мичуринский проспект, 15",
+    messenger: "telegram"
+  });
+
+  assert.ok(orderText.includes("Самовывоз (Москва, м. Раменки, Мичуринский проспект, 15)"));
+  assert.ok(orderText.includes("Telegram"));
+});
+
 test("Cart: сброс корзины при истечении срока жизни сессии (TTL 2 часа)", () => {
   CatalogManager.init();
   Cart.init(CatalogManager);

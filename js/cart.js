@@ -153,7 +153,8 @@ const Cart = {
   generateOrderText(formData) {
     const dateStr = formData.date || "Как можно скорее";
     const timeStr = formData.time ? ` (${formData.time})` : "";
-    const deliveryMethod = formData.deliveryType === "pickup" ? "🚶 Самовывоз (Москва, м. Раменки)" : `🚚 Доставка: ${formData.address || "Адрес согласуем"}`;
+    const pickupAddr = (formData.pickupAddress && formData.pickupAddress.trim()) ? formData.pickupAddress.trim() : "Москва, м. Раменки";
+    const deliveryMethod = formData.deliveryType === "pickup" ? `🚶 Самовывоз (${pickupAddr})` : `🚚 Доставка: ${formData.address || "Адрес согласуем"}`;
     
     let text = `🍰 НОВЫЙ ЗАКАЗ — Mila_sladco\n`;
     text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;

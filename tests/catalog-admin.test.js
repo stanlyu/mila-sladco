@@ -156,6 +156,7 @@ test("CatalogManager: обновление контактов, мессендж�
     maxUsername: "test_tester_max",
     telegramChannelUrl: "https://t.me/test_channel",
     maxChannelUrl: "https://max.ru/join/test_max_channel",
+    pickupAddress: "Москва, м. Раменки, Мичуринский проспект, 10",
     showTelegramDirect: true,
     showMaxDirect: false, // скрываем MAX прямой чат
     showTelegramChannel: false, // скрываем TG канал
@@ -168,6 +169,7 @@ test("CatalogManager: обновление контактов, мессендж�
   const updated = CatalogManager.getProfile();
   assert.strictEqual(updated.telegramUsername, "test_tester");
   assert.strictEqual(updated.maxUsername, "test_tester_max");
+  assert.strictEqual(updated.pickupAddress, "Москва, м. Раменки, Мичуринский проспект, 10");
   assert.strictEqual(updated.showTelegramDirect, true);
   assert.strictEqual(updated.showMaxDirect, false);
   assert.strictEqual(updated.showTelegramChannel, false);
@@ -179,6 +181,7 @@ test("CatalogManager: обновление контактов, мессендж�
   // Сброс
   CatalogManager.resetProfile();
   assert.strictEqual(CatalogManager.getProfile().showPhone, false);
+  assert.strictEqual(CatalogManager.getProfile().pickupAddress, "Москва, м. Раменки");
   assert.strictEqual(CatalogManager.getProfile().showTelegramDirect, true);
   assert.strictEqual(CatalogManager.getProfile().showMaxDirect, true);
   assert.strictEqual(CatalogManager.getProfile().showTelegramChannel, true);
