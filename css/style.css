@@ -1573,11 +1573,29 @@ input[type="date"].form-input {
   color: var(--color-primary);
   margin-bottom: 12px;
   transition: border-color var(--transition-fast);
+  caret-color: transparent;
 }
 
 .pin-input:focus {
   border-color: var(--color-gold);
   background: #FFFFFF;
+  caret-color: transparent;
+}
+
+.btn-pin-reset-link {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px;
+  font-family: inherit;
+  transition: color var(--transition-fast);
+}
+
+.btn-pin-reset-link:hover, .btn-pin-reset-link:active {
+  color: var(--color-gold);
 }
 
 .pin-error-box {

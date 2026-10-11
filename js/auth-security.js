@@ -24,10 +24,10 @@ function hashPin(pin) {
 const DEFAULT_PIN_HASH = hashPin("1819");
 
 const AuthSecurity = {
-  SESSION_KEY: "mila_sladco_auth_session",
-  PIN_STORAGE_KEY: "mila_sladco_pin_hash",
-  LOCK_STORAGE_KEY: "mila_sladco_auth_lock",
-  ATTEMPTS_STORAGE_KEY: "mila_sladco_auth_attempts",
+  SESSION_KEY: "mila_sladco_auth_session_v2",
+  PIN_STORAGE_KEY: "mila_sladco_pin_hash_v2",
+  LOCK_STORAGE_KEY: "mila_sladco_auth_lock_v2",
+  ATTEMPTS_STORAGE_KEY: "mila_sladco_auth_attempts_v2",
 
   MAX_ATTEMPTS: 3,
   LOCK_DURATION_MS: 5 * 60 * 1000, // 5 минут блокировки
@@ -85,6 +85,20 @@ const AuthSecurity = {
   resetLock() {
     this.setFailedAttempts(0);
     this.setLockUntil(0);
+  },
+
+  resetToDefault() {
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(this.PIN_STORAGE_KEY);
+        localStorage.removeItem("mila_sladco_pin_hash");
+        localStorage.removeItem(this.LOCK_STORAGE_KEY);
+        localStorage.removeItem("mila_sladco_auth_lock");
+        localStorage.removeItem(this.ATTEMPTS_STORAGE_KEY);
+        localStorage.removeItem("mila_sladco_auth_attempts");
+      }
+    } catch (e) {}
+    this.resetLock();
   },
 
   isAuthenticated() {

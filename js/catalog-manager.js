@@ -245,8 +245,8 @@ const DEFAULT_PROFILE = {
 };
 
 const CatalogManager = {
-  STORAGE_KEY: "mila_sladco_custom_catalog_v1",
-  PROFILE_STORAGE_KEY: "mila_sladco_profile_v1",
+  STORAGE_KEY: "mila_sladco_custom_catalog_v2",
+  PROFILE_STORAGE_KEY: "mila_sladco_profile_v2",
   products: [],
   profile: null,
 
@@ -367,7 +367,18 @@ const CatalogManager = {
 
   resetToDefaults() {
     this.products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+    this.profile = Object.assign({}, DEFAULT_PROFILE);
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(this.STORAGE_KEY);
+        localStorage.removeItem("mila_sladco_custom_catalog_v1");
+        localStorage.removeItem(this.PROFILE_STORAGE_KEY);
+        localStorage.removeItem("mila_sladco_profile_v1");
+      }
+    } catch (e) {}
     this.save();
+    this.notify();
+    this.notifyProfile();
   },
 
   getProfile() {

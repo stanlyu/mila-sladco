@@ -444,13 +444,33 @@ const AdminPanel = {
     showToast("Резервная копия меню сохранена! 💾");
   },
 
-  // Сброс к заводским десертам
+  // Сброс к заводским настройкам (меню, аватарка, контакты, PIN)
   resetDefaults() {
-    if (confirm("Вы точно хотите вернуть стандартные десерты? Все ваши добавленные десерты сбросятся.")) {
+    if (confirm("Вы точно хотите вернуть стандартные настройки? (все десерты, фото шефа и PIN 1819 сбросятся)")) {
       CatalogManager.resetToDefaults();
+      AuthSecurity.resetToDefault();
       this.renderAdminList();
-      showToast("Меню сброшено до стандартного");
+      this.updateChefAvatarPreview();
+      if (typeof renderProfile === "function") {
+        renderProfile();
+      }
+      showToast("Все настройки сброшены до стандартных (PIN 1819) ✨", 4000);
     }
+  },
+
+  // Сброс PIN-кода до дефолтного (1819)
+  resetPinToDefault() {
+    AuthSecurity.resetToDefault();
+    const pinInput = document.getElementById("pin-input-field");
+    const errBox = document.getElementById("pin-error-box");
+    if (pinInput) {
+      pinInput.value = "1819";
+      pinInput.focus();
+    }
+    if (errBox) {
+      errBox.style.display = "none";
+    }
+    showToast("PIN-код сброшен до стандартного (1819) 🔑", 4000);
   },
 
   // ==========================================
