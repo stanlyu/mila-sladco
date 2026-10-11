@@ -229,9 +229,22 @@ const SHOP_INFO = {
   deliveryNote: "Доставка Яндекс.Курьером по Москве и МО или удобный самовывоз."
 };
 
+const DEFAULT_PROFILE = {
+  name: "Mila_sladco",
+  tagline: "Авторские торты & корпусные пирожные • Москва",
+  owner: "Кондитер Люда",
+  avatar: "assets/images/chef-mila.jpg",
+  statusText: "Принимаем заказы на сегодня и предзаказы",
+  phone: "+7 (926) 880-14-14",
+  phoneClean: "+79268801414",
+  hasSeenTour: false
+};
+
 const CatalogManager = {
   STORAGE_KEY: "mila_sladco_custom_catalog_v1",
+  PROFILE_STORAGE_KEY: "mila_sladco_profile_v1",
   products: [],
+  profile: null,
 
   init() {
     try {
@@ -245,6 +258,18 @@ const CatalogManager = {
     } catch (e) {
       console.warn("Ошибка загрузки каталога, используются дефолтные", e);
       this.products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+    }
+
+    try {
+      const savedProf = typeof localStorage !== "undefined" ? localStorage.getItem(this.PROFILE_STORAGE_KEY) : null;
+      if (savedProf) {
+        this.profile = Object.assign({}, DEFAULT_PROFILE, JSON.parse(savedProf));
+      } else {
+        this.profile = Object.assign({}, DEFAULT_PROFILE);
+      }
+    } catch (e) {
+      console.warn("Ошибка загрузки профиля, используются дефолтные", e);
+      this.profile = Object.assign({}, DEFAULT_PROFILE);
     }
   },
 
@@ -341,10 +366,49 @@ const CatalogManager = {
     this.save();
   },
 
+  getProfile() {
+    if (!this.profile) {
+      this.init();
+    }
+    return this.profile;
+  },
+
+  updateProfile(patch) {
+    if (!this.profile) this.init();
+    Object.assign(this.profile, patch);
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(this.profile));
+      }
+    } catch (e) {
+      console.warn("Ошибка сохранения профиля", e);
+    }
+    this.notifyProfile();
+    return this.profile;
+  },
+
+  resetProfile() {
+    this.profile = Object.assign({}, DEFAULT_PROFILE);
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(this.PROFILE_STORAGE_KEY);
+      }
+    } catch (e) {}
+    this.notifyProfile();
+  },
+
   notify() {
     if (typeof document !== "undefined" && document.dispatchEvent) {
       document.dispatchEvent(new CustomEvent("catalog:updated", {
         detail: { products: this.products }
+      }));
+    }
+  },
+
+  notifyProfile() {
+    if (typeof document !== "undefined" && document.dispatchEvent) {
+      document.dispatchEvent(new CustomEvent("profile:updated", {
+        detail: { profile: this.profile }
       }));
     }
   }
@@ -355,12 +419,14 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     CatalogManager,
     DEFAULT_PRODUCTS,
+    DEFAULT_PROFILE,
     CATEGORIES,
     SHOP_INFO
   };
 } else {
   window.CatalogManager = CatalogManager;
   window.DEFAULT_PRODUCTS = DEFAULT_PRODUCTS;
+  window.DEFAULT_PROFILE = DEFAULT_PROFILE;
   window.CATEGORIES = CATEGORIES;
   window.SHOP_INFO = SHOP_INFO;
 }

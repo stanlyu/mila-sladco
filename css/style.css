@@ -1513,4 +1513,338 @@ body.wide-mode .app-container {
   border: 1px solid #FFC9C9;
 }
 
+/* ========================================================
+   Блок профиля шеф-кондитера в админке
+   ======================================================== */
+.admin-profile-card {
+  background: #FAF7F2;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.admin-profile-thumb-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.admin-chef-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-gold);
+}
+
+.admin-profile-meta {
+  flex: 1;
+}
+
+.admin-profile-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-primary);
+  margin-bottom: 2px;
+}
+
+.admin-profile-subtitle {
+  font-size: 11px;
+  color: var(--color-muted);
+  margin-bottom: 8px;
+}
+
+.btn-change-avatar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #FFFFFF;
+  border: 1px solid var(--color-gold);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* ========================================================
+   Кнопки обучения и переключателя подсказок
+   ======================================================== */
+.btn-help-badge {
+  background: #FFF9DB;
+  border: 1px solid #FFE066;
+  color: #F08C00;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-tooltip-toggle {
+  background: #F1F3F5;
+  border: 1px solid #CED4DA;
+  color: #495057;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+.btn-tooltip-toggle.active {
+  background: #EBFBEE;
+  border-color: #B2F2BB;
+  color: #2B8A3E;
+}
+
+/* ========================================================
+   Интерактивные подсказки-«бублики» (Tooltip Bubbles)
+   ======================================================== */
+.tooltip-bubble {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(197, 154, 71, 0.4);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease;
+  user-select: none;
+  animation: pulse-bubble 2.5s infinite;
+  vertical-align: middle;
+}
+
+.tooltip-bubble:hover {
+  transform: scale(1.18);
+}
+
+@keyframes pulse-bubble {
+  0% { box-shadow: 0 0 0 0 rgba(197, 154, 71, 0.5); }
+  70% { box-shadow: 0 0 0 6px rgba(197, 154, 71, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(197, 154, 71, 0); }
+}
+
+.admin-profile-thumb-wrap .tooltip-bubble {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+}
+
+/* Скрытие подсказок, если тумблер выключен */
+.hide-tooltips .tooltip-bubble {
+  display: none !important;
+}
+
+/* Всплывающее окно подсказки (Popover) */
+.tooltip-popover {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  width: calc(100% - 32px);
+  max-width: 380px;
+  background: #FFFFFF;
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 30px rgba(44, 29, 24, 0.2);
+  padding: 16px;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tooltip-popover.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooltip-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.tooltip-popover-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tooltip-popover-close {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.tooltip-popover-text {
+  font-size: 13px;
+  color: var(--color-muted);
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.tooltip-popover-btn {
+  width: 100%;
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ========================================================
+   Обучающий тур для Люды (Tour Modal & Slider)
+   ======================================================== */
+.tour-sheet {
+  background: #FFFFFF;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  padding: 24px 20px 20px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  overflow: hidden;
+  margin: auto;
+}
+
+.tour-slide {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 4px 16px;
+}
+
+.tour-slide.active {
+  display: flex;
+  animation: fadeIn 0.3s ease;
+}
+
+.tour-slide-icon {
+  font-size: 44px;
+  margin-bottom: 12px;
+  width: 76px;
+  height: 76px;
+  background: #FAF7F2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #EADBCE;
+}
+
+.tour-slide-title {
+  font-family: var(--font-serif);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.tour-slide-desc {
+  font-size: 13px;
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.tour-slide-steps {
+  background: #FAF7F2;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  text-align: left;
+  width: 100%;
+  font-size: 12px;
+  color: var(--color-primary);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tour-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+  margin-top: auto;
+}
+
+.tour-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.tour-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #E9ECEF;
+  transition: all 0.2s ease;
+}
+
+.tour-dot.active {
+  width: 22px;
+  border-radius: 4px;
+  background: var(--color-gold);
+}
+
+.tour-nav-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-tour-nav {
+  border: 1px solid var(--color-border);
+  background: #FFFFFF;
+  color: var(--color-primary);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-tour-primary {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border: none;
+  font-weight: 700;
+}
+
+
 

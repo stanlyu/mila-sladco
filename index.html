@@ -396,29 +396,67 @@
 
       <div style="padding: 0 20px 28px;">
         <div class="admin-header-box">
-          <h3 class="admin-sheet-title">👩‍🍳 Кабинет Люды</h3>
-          <button type="button" class="btn-admin-action btn-admin-logout" onclick="AdminPanel.logout()" title="Выйти из режима">
-            🔒 Выйти
-          </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 class="admin-sheet-title">👩‍🍳 Кабинет Люды</h3>
+            <button type="button" class="btn-help-badge" onclick="AdminPanel.openTour()" title="Открыть обучающий тур">
+              🎓 Обучение
+            </button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button type="button" id="btn-toggle-tooltips" class="btn-tooltip-toggle active" onclick="AdminPanel.toggleTooltips()" title="Включить/выключить подсказки на кнопках">
+              💡 Подсказки
+            </button>
+            <button type="button" class="btn-admin-action btn-admin-logout" onclick="AdminPanel.logout()" title="Выйти из режима">
+              🔒 Выйти
+            </button>
+          </div>
+        </div>
+
+        <!-- Карточка шеф-кондитера: аватарка и статус -->
+        <div class="admin-profile-card">
+          <div class="admin-profile-thumb-wrap">
+            <img id="admin-chef-avatar-preview" src="assets/images/chef-mila.jpg" alt="Шеф Люда" class="admin-chef-avatar" />
+            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('avatar', this)" aria-label="Подсказка">?</button>
+          </div>
+          <div class="admin-profile-meta">
+            <div class="admin-profile-title">Фото кондитера в шапке сайта</div>
+            <div class="admin-profile-subtitle">Отображается на главной странице гостям</div>
+            <label class="btn-change-avatar">
+              📸 Сменить фото шефа
+              <input type="file" accept="image/*" style="display: none;" onchange="AdminPanel.handleChefAvatarUpload(this)" />
+            </label>
+          </div>
         </div>
 
         <div class="admin-top-actions">
-          <button type="button" class="btn-admin-primary" onclick="AdminPanel.openAddNew()">
-            <span>✨</span> + Добавить десерт
-          </button>
-          <button type="button" class="btn-admin-secondary" onclick="AdminPanel.exportBackup()" title="Сохранить резервную копию меню">
-            💾 Скачать меню
-          </button>
-          <button type="button" class="btn-admin-secondary" onclick="AdminPanel.promptChangePin()" title="Изменить PIN-код">
-            🔑 Сменить PIN
-          </button>
+          <div style="display: inline-flex; align-items: center; gap: 4px;">
+            <button type="button" class="btn-admin-primary" onclick="AdminPanel.openAddNew()">
+              <span>✨</span> + Добавить десерт
+            </button>
+            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('add', this)" aria-label="Подсказка">?</button>
+          </div>
+
+          <div style="display: inline-flex; align-items: center; gap: 4px;">
+            <button type="button" class="btn-admin-secondary" onclick="AdminPanel.exportBackup()" title="Сохранить резервную копию меню">
+              💾 Скачать меню
+            </button>
+            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('backup', this)" aria-label="Подсказка">?</button>
+          </div>
+
+          <div style="display: inline-flex; align-items: center; gap: 4px;">
+            <button type="button" class="btn-admin-secondary" onclick="AdminPanel.promptChangePin()" title="Изменить PIN-код">
+              🔑 Сменить PIN
+            </button>
+            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('pin', this)" aria-label="Подсказка">?</button>
+          </div>
+
           <button type="button" class="btn-admin-secondary" onclick="AdminPanel.resetDefaults()" style="color: #C92A2A;" title="Сбросить к исходным">
             🔄 Сброс
           </button>
         </div>
 
         <p style="font-size: 12px; color: var(--color-muted); margin-bottom: 12px;">
-          💡 Здесь вы можете прямо с телефона менять цены, скрывать закончившиеся десерты («Закончился») и добавлять свои фото.
+          💡 Ниже вы можете прямо с телефона менять цены, скрывать десерты («Закончился») и добавлять свои фото.
         </p>
 
         <!-- Список товаров для управления -->
@@ -428,6 +466,100 @@
 
       </div>
     </div>
+  </div>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: ИНТЕРАКТИВНЫЙ ОБУЧАЮЩИЙ ТУР ДЛЯ ЛЮДЫ
+       ======================================================== -->
+  <div id="tour-modal" class="modal-overlay" onclick="AdminPanel.closeTour()">
+    <div class="tour-sheet" onclick="event.stopPropagation()">
+      <button type="button" class="sheet-close-btn" onclick="AdminPanel.closeTour()" aria-label="Закрыть">✕</button>
+
+      <!-- Слайды тура -->
+      <div id="tour-slider">
+        <!-- Слайд 1: Добро пожаловать -->
+        <div class="tour-slide active" data-step="1">
+          <div class="tour-slide-icon">👩‍🍳</div>
+          <h3 class="tour-slide-title">Добро пожаловать, Люда!</h3>
+          <p class="tour-slide-desc">
+            Это ваш личный кабинет кондитера. Он скрыт от клиентов и доступен только вам.
+          </p>
+          <div class="tour-slide-steps">
+            <div>🔑 <b>Секретный вход:</b> 3 быстрых тапа по вашей аватарке вверху сайта.</div>
+            <div>🔢 <b>Ваш PIN-код:</b> <code>1414</code> (последние 4 цифры телефона).</div>
+            <div>📱 <b>Все под рукой:</b> управляйте витриной прямо с мобильного телефона без компьютера!</div>
+          </div>
+        </div>
+
+        <!-- Слайд 2: Фото и Аватарка -->
+        <div class="tour-slide" data-step="2">
+          <div class="tour-slide-icon">📸</div>
+          <h3 class="tour-slide-title">Ваши фото и аватарка</h3>
+          <p class="tour-slide-desc">
+            Обновляйте фото десертов и свое фото кондитера прямо из галереи телефона.
+          </p>
+          <div class="tour-slide-steps">
+            <div>✨ <b>Фото шефа:</b> нажмите кнопку «Сменить фото шефа» вверху панели.</div>
+            <div>🍰 <b>Фото десертов:</b> при добавлении или редактировании десерта выберите любое фото из медиатеки смартфона.</div>
+            <div>📐 <b>Кадрирование:</b> сайт сам аккуратно подгонит картинку под стиль витрины.</div>
+          </div>
+        </div>
+
+        <!-- Слайд 3: Управление ценами и наличием -->
+        <div class="tour-slide" data-step="3">
+          <div class="tour-slide-icon">💰</div>
+          <h3 class="tour-slide-title">Цены и наличие в 1 клик</h3>
+          <p class="tour-slide-desc">
+            Больше никаких сложных настроек — всё меняется мгновенно!
+          </p>
+          <div class="tour-slide-steps">
+            <div>✏️ <b>Изменить цену:</b> нажмите на цифру цены прямо на карточке и введите новую стоимость.</div>
+            <div>❌ <b>«Закончился»:</b> нажмите зеленую кнопку «В наличии», она станет красной «Закончился», и клиенты не смогут заказать эту позицию.</div>
+            <div>✅ <b>Снова на витрине:</b> когда испекли новую партию — один тап вернет десерт в продажу!</div>
+          </div>
+        </div>
+
+        <!-- Слайд 4: Заказы в мессенджеры -->
+        <div class="tour-slide" data-step="4">
+          <div class="tour-slide-icon">💬</div>
+          <h3 class="tour-slide-title">Заказы сразу в MAX и Telegram</h3>
+          <p class="tour-slide-desc">
+            Покупатели оформляют заказ в красивой корзине сайта, а вам приходит готовый чек!
+          </p>
+          <div class="tour-slide-steps">
+            <div>📋 <b>Полный состав:</b> в сообщении будут перечислены все выбранные десерты, количество и сумма.</div>
+            <div>🚚 <b>Детали доставки:</b> адрес, дата, желаемое время и надпись на торте или открытке.</div>
+            <div>💬 <b>Прямой диалог:</b> вам останется только подтвердить заказ клиенту ответным сообщением!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Навигация по слайдам -->
+      <div class="tour-footer">
+        <div class="tour-dots" id="tour-dots">
+          <span class="tour-dot active" onclick="AdminPanel.goToTourSlide(1)"></span>
+          <span class="tour-dot" onclick="AdminPanel.goToTourSlide(2)"></span>
+          <span class="tour-dot" onclick="AdminPanel.goToTourSlide(3)"></span>
+          <span class="tour-dot" onclick="AdminPanel.goToTourSlide(4)"></span>
+        </div>
+        <div class="tour-nav-btns">
+          <button type="button" id="tour-btn-prev" class="btn-tour-nav" onclick="AdminPanel.prevTourSlide()" style="display: none;">← Назад</button>
+          <button type="button" id="tour-btn-next" class="btn-tour-nav btn-tour-primary" onclick="AdminPanel.nextTourSlide()">Далее →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       ИНТЕРАКТИВНОЕ ВСПЛЫВАЮЩЕЕ ОКНО ДЛЯ «БУБЛИКОВ» (POPOVER)
+       ======================================================== -->
+  <div id="tooltip-popover" class="tooltip-popover">
+    <div class="tooltip-popover-head">
+      <div id="tooltip-popover-title" class="tooltip-popover-title">💡 Подсказка</div>
+      <button type="button" class="tooltip-popover-close" onclick="AdminPanel.hideBubble()">✕</button>
+    </div>
+    <div id="tooltip-popover-text" class="tooltip-popover-text">Текст подсказки</div>
+    <button type="button" class="tooltip-popover-btn" onclick="AdminPanel.hideBubble()">Понятно, спасибо!</button>
   </div>
 
   <!-- ========================================================

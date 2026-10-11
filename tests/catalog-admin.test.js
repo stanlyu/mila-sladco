@@ -113,3 +113,24 @@ test("CatalogManager: экспорт и импорт базы десертов (
   CatalogManager.importData(backupJson);
   assert.strictEqual(CatalogManager.getProductById("mango-passion").price, 999);
 });
+
+test("CatalogManager: Люда может обновить аватарку шефа и статус", () => {
+  CatalogManager.init();
+  const profile = CatalogManager.getProfile();
+  assert.strictEqual(profile.owner, "Кондитер Люда");
+  assert.strictEqual(profile.avatar, "assets/images/chef-mila.jpg");
+
+  CatalogManager.updateProfile({
+    avatar: "data:image/jpeg;base64,/9j/new-chef-photo",
+    statusText: "Принимаем заказы к 8 Марта!"
+  });
+
+  const updatedProfile = CatalogManager.getProfile();
+  assert.strictEqual(updatedProfile.avatar, "data:image/jpeg;base64,/9j/new-chef-photo");
+  assert.strictEqual(updatedProfile.statusText, "Принимаем заказы к 8 Марта!");
+
+  // Сброс профиля
+  CatalogManager.resetProfile();
+  assert.strictEqual(CatalogManager.getProfile().avatar, "assets/images/chef-mila.jpg");
+});
+

@@ -127,14 +127,44 @@ const AdminPanel = {
   open() {
     const modal = document.getElementById("admin-modal");
     if (!modal) return;
+    this.updateChefAvatarPreview();
     this.renderAdminList();
     modal.classList.add("open");
+
+    // Если Люда впервые в кабинете — запускаем интерактивный тур
+    const profile = CatalogManager.getProfile();
+    if (profile && !profile.hasSeenTour) {
+      setTimeout(() => this.openTour(), 400);
+    }
   },
 
   close() {
     const modal = document.getElementById("admin-modal");
     if (modal) modal.classList.remove("open");
     this.closeEditModal();
+    this.hideBubble();
+  },
+
+  updateChefAvatarPreview() {
+    const profile = CatalogManager.getProfile();
+    const preview = document.getElementById("admin-chef-avatar-preview");
+    if (preview && profile && profile.avatar) {
+      preview.src = profile.avatar;
+    }
+  },
+
+  handleChefAvatarUpload(input) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64Url = e.target.result;
+        CatalogManager.updateProfile({ avatar: base64Url });
+        this.updateChefAvatarPreview();
+        showToast("Фото шеф-кондитера успешно обновлено! 📸✨");
+      };
+      reader.readAsDataURL(file);
+    }
   },
 
   renderAdminList() {
@@ -154,15 +184,19 @@ const AdminPanel = {
               <label>Цена: </label>
               <input type="number" class="admin-price-input" value="${p.price}" 
                 onchange="AdminPanel.quickUpdatePrice('${p.id}', this.value)" /> ₽
+              <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('price', this)" aria-label="Подсказка">?</button>
             </div>
           </div>
         </div>
 
         <div class="admin-item-actions">
-          <button type="button" class="btn-admin-action ${p.isAvailable === false ? "btn-status-off" : "btn-status-on"}" 
-            onclick="AdminPanel.toggleStatus('${p.id}')">
-            ${p.isAvailable === false ? "❌ Закончился" : "✅ В наличии"}
-          </button>
+          <div style="display: inline-flex; align-items: center; gap: 4px;">
+            <button type="button" class="btn-admin-action ${p.isAvailable === false ? "btn-status-off" : "btn-status-on"}" 
+              onclick="AdminPanel.toggleStatus('${p.id}')">
+              ${p.isAvailable === false ? "❌ Закончился" : "✅ В наличии"}
+            </button>
+            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('status', this)" aria-label="Подсказка">?</button>
+          </div>
           
           <button type="button" class="btn-admin-action btn-admin-edit" onclick="AdminPanel.openEditProduct('${p.id}')">
             ✏️ Изменить
@@ -350,6 +384,132 @@ const AdminPanel = {
       this.renderAdminList();
       showToast("Меню сброшено до стандартного");
     }
+  },
+
+  // ==========================================
+  // Обучающий тур для Люды (Tour Slider)
+  // ==========================================
+  currentTourSlide: 1,
+  totalTourSlides: 4,
+
+  openTour() {
+    const modal = document.getElementById("tour-modal");
+    if (!modal) return;
+    this.goToTourSlide(1);
+    modal.classList.add("open");
+  },
+
+  closeTour() {
+    const modal = document.getElementById("tour-modal");
+    if (modal) modal.classList.remove("open");
+    CatalogManager.updateProfile({ hasSeenTour: true });
+  },
+
+  nextTourSlide() {
+    if (this.currentTourSlide < this.totalTourSlides) {
+      this.goToTourSlide(this.currentTourSlide + 1);
+    } else {
+      this.closeTour();
+      showToast("Отлично! Приятной работы с витриной 🍰");
+    }
+  },
+
+  prevTourSlide() {
+    if (this.currentTourSlide > 1) {
+      this.goToTourSlide(this.currentTourSlide - 1);
+    }
+  },
+
+  goToTourSlide(step) {
+    this.currentTourSlide = step;
+    const slides = document.querySelectorAll(".tour-slide");
+    slides.forEach((s) => {
+      s.classList.toggle("active", parseInt(s.dataset.step, 10) === step);
+    });
+
+    const dots = document.querySelectorAll(".tour-dot");
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle("active", idx === step - 1);
+    });
+
+    const prevBtn = document.getElementById("tour-btn-prev");
+    const nextBtn = document.getElementById("tour-btn-next");
+
+    if (prevBtn) {
+      prevBtn.style.display = step > 1 ? "inline-block" : "none";
+    }
+
+    if (nextBtn) {
+      nextBtn.textContent = step === this.totalTourSlides ? "Всё понятно, к витрине! ✨" : "Далее →";
+    }
+  },
+
+  // ==========================================
+  // Интерактивные подсказки-«бублики» (Tooltips)
+  // ==========================================
+  tooltipsEnabled: true,
+
+  toggleTooltips() {
+    this.tooltipsEnabled = !this.tooltipsEnabled;
+    const adminModal = document.getElementById("admin-modal");
+    const btn = document.getElementById("btn-toggle-tooltips");
+
+    if (adminModal) {
+      adminModal.classList.toggle("hide-tooltips", !this.tooltipsEnabled);
+    }
+    if (btn) {
+      btn.classList.toggle("active", this.tooltipsEnabled);
+      btn.textContent = this.tooltipsEnabled ? "💡 Подсказки" : "💡 Подсказки: Выкл";
+    }
+    showToast(this.tooltipsEnabled ? "Подсказки включены 💡" : "Подсказки выключены 🔕");
+  },
+
+  showBubble(type, targetEl) {
+    const popover = document.getElementById("tooltip-popover");
+    const titleEl = document.getElementById("tooltip-popover-title");
+    const textEl = document.getElementById("tooltip-popover-text");
+    if (!popover || !titleEl || !textEl) return;
+
+    const BUBBLE_TEXTS = {
+      avatar: {
+        title: "📸 Фото шеф-кондитера",
+        text: "Здесь вы можете загрузить свою свежую фотографию из галереи телефона. Она сразу появится в шапке сайта для всех посетителей!"
+      },
+      add: {
+        title: "✨ Добавить десерт",
+        text: "Создать новый десерт: выберите категорию (пирожные, бенто или подарочные наборы), загрузите фото из галереи, укажите название и цену."
+      },
+      backup: {
+        title: "💾 Резервная копия меню",
+        text: "Скачивает на телефон файл со всеми вашими ценами, описаниями и добавленными десертами. Полезно сохранить перед большими изменениями."
+      },
+      pin: {
+        title: "🔑 Смена PIN-кода",
+        text: "Позволяет установить свой секретный код для входа (минимум 4 цифры) вместо стандартного 1414."
+      },
+      price: {
+        title: "💰 Быстрая цена",
+        text: "Нажмите прямо на цифру, введите новую цену и коснитесь экрана в любом месте — цена мгновенно обновится на сайте!"
+      },
+      status: {
+        title: "🚦 Наличие десерта",
+        text: "«В наличии» — клиенты могут заказать. «Закончился» — десерт останется на витрине, но с пометкой, и положить его в корзину будет нельзя."
+      }
+    };
+
+    const info = BUBBLE_TEXTS[type] || {
+      title: "💡 Подсказка",
+      text: "Нажмите на нужную кнопку для управления витриной."
+    };
+
+    titleEl.innerHTML = info.title;
+    textEl.textContent = info.text;
+    popover.classList.add("open");
+  },
+
+  hideBubble() {
+    const popover = document.getElementById("tooltip-popover");
+    if (popover) popover.classList.remove("open");
   }
 };
 

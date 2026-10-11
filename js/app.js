@@ -414,7 +414,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 2800);
   };
 
+  // Рендеринг профиля шефа (аватарка и статус)
+  function renderProfile() {
+    const profile = CatalogManager.getProfile();
+    if (!profile) return;
+    const avatarImg = document.querySelector(".avatar-img");
+    if (avatarImg && profile.avatar) {
+      avatarImg.src = profile.avatar;
+    }
+  }
+
+  document.addEventListener("profile:updated", renderProfile);
+
   // Первоначальный рендер
+  renderProfile();
   renderCategories();
   renderProducts();
   renderTaplinkHits();
