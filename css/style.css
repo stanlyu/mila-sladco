@@ -718,6 +718,20 @@ body.wide-mode .app-container {
 /* ========================================================
    Модальные окна (Bottom Sheet & Popups)
    ======================================================== */
+body.modal-open {
+  overflow: hidden !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+  height: 100vh !important;
+}
+
+body.modal-open header,
+body.modal-open main,
+body.modal-open .floating-cart-bar {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -726,6 +740,7 @@ body.wide-mode .app-container {
   bottom: 0;
   background: rgba(44, 29, 24, 0.65);
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 200;
   opacity: 0;
   visibility: hidden;
@@ -733,6 +748,8 @@ body.wide-mode .app-container {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .modal-overlay.open {
@@ -747,6 +764,9 @@ body.wide-mode .app-container {
   border-radius: 28px 28px 0 0;
   max-height: 90vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   transform: translateY(100%);
   transition: transform var(--transition-smooth);
   display: flex;
@@ -766,24 +786,39 @@ body.wide-mode .app-container {
   border-radius: 2px;
   margin: 12px auto 6px;
   cursor: grab;
+  flex-shrink: 0;
 }
 
 .sheet-close-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 32px;
-  height: 32px;
+  position: sticky;
+  top: 12px;
+  align-self: flex-end;
+  margin-left: auto;
+  margin-right: 14px;
+  margin-top: -24px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--bg-card-subtle);
-  border: none;
-  font-size: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 15px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--color-muted);
-  z-index: 10;
+  color: var(--color-primary);
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform var(--transition-fast), background var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sheet-close-btn:active {
+  transform: scale(0.92);
+  background: #F0ECE4;
 }
 
 /* Детальная карточка десерта */
@@ -1074,7 +1109,9 @@ body.wide-mode .app-container {
 
 .form-input, .form-textarea, .form-select {
   width: 100%;
-  padding: 10px 14px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid #DED7CB;
   background: #FFFFFF;
@@ -1085,14 +1122,36 @@ body.wide-mode .app-container {
   transition: border-color var(--transition-fast);
 }
 
-.form-input:focus, .form-textarea:focus {
+.form-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238E7F78' d='M1.41 0L6 4.58L10.59 0L12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  cursor: pointer;
+}
+
+input[type="date"].form-input {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus {
   border-color: var(--color-gold);
 }
 
 .form-row-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
+}
+
+.form-row-2 > .form-group {
+  min-width: 0;
 }
 
 /* Переключатель способа связи */

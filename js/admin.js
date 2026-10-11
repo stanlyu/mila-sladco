@@ -399,9 +399,9 @@ const AdminPanel = {
     const phoneInput = document.getElementById("setting-phone");
     const showPhoneCheckbox = document.getElementById("setting-show-phone");
 
-    if (tgUser) tgUser.value = profile.telegramUsername || "mila_sladco";
-    if (tgChan) tgChan.value = profile.telegramChannelUrl || "https://t.me/mila_sladco_cakes";
-    if (maxUser) maxUser.value = profile.maxUsername || "mila_sladco";
+    if (tgUser) tgUser.value = profile.telegramUsername || "";
+    if (tgChan) tgChan.value = profile.telegramChannelUrl || "";
+    if (maxUser) maxUser.value = profile.maxUsername || "";
     if (phoneInput) phoneInput.value = profile.phone || "+7 (915) 318-18-19";
     if (showPhoneCheckbox) showPhoneCheckbox.checked = Boolean(profile.showPhone);
 
@@ -428,9 +428,9 @@ const AdminPanel = {
     const showPhone = showPhoneCheckbox ? showPhoneCheckbox.checked : false;
 
     CatalogManager.updateProfile({
-      telegramUsername: cleanTg || "mila_sladco",
-      telegramChannelUrl: tgChannel || "https://t.me/mila_sladco_cakes",
-      maxUsername: maxLogin || "mila_sladco",
+      telegramUsername: cleanTg,
+      telegramChannelUrl: tgChannel,
+      maxUsername: maxLogin,
       phone: phoneVal,
       phoneClean: cleanDigits.startsWith("+") ? cleanDigits : ("+" + cleanDigits),
       showPhone: showPhone

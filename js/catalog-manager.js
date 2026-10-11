@@ -220,12 +220,12 @@ const SHOP_INFO = {
   status: "Принимаем заказы на сегодня и предзаказы",
   phone: "+7 (915) 318-18-19",
   phoneClean: "+79153181819",
-  telegramUsername: "mila_sladco",
-  telegramChannel: "mila_sladco_cakes",
-  telegramChannelUrl: "https://t.me/mila_sladco_cakes",
-  telegramDirectUrl: "https://t.me/mila_sladco",
-  maxUsername: "mila_sladco",
-  maxDirectUrl: "https://max.ru/mila_sladco",
+  telegramUsername: "",
+  telegramChannel: "",
+  telegramChannelUrl: "",
+  telegramDirectUrl: "",
+  maxUsername: "",
+  maxDirectUrl: "",
   deliveryNote: "Доставка Яндекс.Курьером по Москве и МО или удобный самовывоз."
 };
 
@@ -238,9 +238,9 @@ const DEFAULT_PROFILE = {
   phone: "+7 (915) 318-18-19",
   phoneClean: "+79153181819",
   showPhone: false,
-  telegramUsername: "mila_sladco",
-  telegramChannelUrl: "https://t.me/mila_sladco_cakes",
-  maxUsername: "mila_sladco",
+  telegramUsername: "",
+  telegramChannelUrl: "",
+  maxUsername: "",
   hasSeenTour: false
 };
 

@@ -141,8 +141,8 @@ test("CatalogManager: обновление контактов, мессендж�
   const defaultProf = CatalogManager.getProfile();
   assert.strictEqual(defaultProf.showPhone, false);
   assert.strictEqual(defaultProf.phone, "+7 (915) 318-18-19");
-  assert.strictEqual(defaultProf.telegramUsername, "mila_sladco");
-  assert.strictEqual(defaultProf.maxUsername, "mila_sladco");
+  assert.strictEqual(defaultProf.telegramUsername, "");
+  assert.strictEqual(defaultProf.maxUsername, "");
 
   // Пользователь настраивает свои контакты для тестов
   CatalogManager.updateProfile({

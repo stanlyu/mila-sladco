@@ -391,15 +391,24 @@ document.addEventListener("DOMContentLoaded", () => {
         ? CatalogManager.getProfile() 
         : {};
 
+      const cleanTg = (profile.telegramUsername || "").trim().replace(/^@/, "");
+      const cleanMax = (profile.maxUsername || "").trim().replace(/^@/, "");
+      const targetUser = selectedMessenger === "telegram" ? cleanTg : cleanMax;
+
+      if (!targetUser || targetUser === "none" || targetUser === "mila_sladco") {
+        Cart.clear();
+        closeCart();
+        showToast("💡 Чек скопирован в буфер! Для отправки в свой " + (selectedMessenger === "telegram" ? "Telegram" : "MAX") + " укажите свой логин в Кабинете кондитера (3 тапа по фото) → «Контакты & ссылки».");
+        return;
+      }
+
       if (selectedMessenger === "telegram") {
-        const tgUser = (profile && profile.telegramUsername) || SHOP_INFO.telegramUsername;
         const encodedText = encodeURIComponent(orderText);
-        const tgUrl = `https://t.me/${tgUser}?text=${encodedText}`;
+        const tgUrl = `https://t.me/${cleanTg}?text=${encodedText}`;
         window.open(tgUrl, "_blank");
       } else {
-        const maxUser = (profile && profile.maxUsername) || SHOP_INFO.maxUsername;
         const encodedText = encodeURIComponent(orderText);
-        const maxUrl = `https://max.ru/${maxUser}?message=${encodedText}`;
+        const maxUrl = `https://max.ru/${cleanMax}?message=${encodedText}`;
         window.open(maxUrl, "_blank");
       }
 
@@ -417,8 +426,24 @@ document.addEventListener("DOMContentLoaded", () => {
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(() => {
       toastMsg.classList.remove("show");
-    }, 2800);
+    }, 3200);
   };
+
+  // Автоматическая блокировка скролла фона при открытых модалках
+  function initModalScrollLock() {
+    const overlays = document.querySelectorAll(".modal-overlay");
+    const checkState = () => {
+      const anyOpen = Array.from(overlays).some((m) => m.classList.contains("open"));
+      document.body.classList.toggle("modal-open", anyOpen);
+    };
+
+    if (typeof MutationObserver !== "undefined") {
+      const observer = new MutationObserver(checkState);
+      overlays.forEach((m) => {
+        observer.observe(m, { attributes: true, attributeFilter: ["class"] });
+      });
+    }
+  }
 
   // Рендеринг профиля шефа (аватарка, статус, ссылки и телефон)
   function renderProfile() {
@@ -431,13 +456,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Ссылки и кнопки в таплинке
     const maxBtn = document.getElementById("link-btn-max");
-    if (maxBtn && profile.maxUsername) {
-      maxBtn.href = `https://max.ru/${profile.maxUsername}`;
+    if (maxBtn) {
+      const cleanMax = (profile.maxUsername || "").trim().replace(/^@/, "");
+      if (cleanMax && cleanMax !== "none" && cleanMax !== "mila_sladco") {
+        maxBtn.href = `https://max.ru/${cleanMax}`;
+        maxBtn.onclick = null;
+      } else {
+        maxBtn.href = "javascript:void(0)";
+        maxBtn.onclick = (e) => {
+          e.preventDefault();
+          showToast("💡 Ссылку на MAX кондитер Люда укажет в своем кабинете");
+        };
+      }
     }
 
     const tgBtn = document.getElementById("link-btn-telegram");
-    if (tgBtn && profile.telegramChannelUrl) {
-      tgBtn.href = profile.telegramChannelUrl;
+    if (tgBtn) {
+      const tgChannel = (profile.telegramChannelUrl || "").trim();
+      if (tgChannel && tgChannel !== "none" && tgChannel !== "https://t.me/mila_sladco_cakes") {
+        tgBtn.href = tgChannel;
+        tgBtn.onclick = null;
+      } else {
+        tgBtn.href = "javascript:void(0)";
+        tgBtn.onclick = (e) => {
+          e.preventDefault();
+          showToast("💡 Ссылку на Telegram-канал кондитер Люда укажет в кабинете");
+        };
+      }
     }
 
     const phoneBtn = document.getElementById("link-btn-phone");
@@ -455,6 +500,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.renderProfile = renderProfile;
   document.addEventListener("profile:updated", renderProfile);
+  initModalScrollLock();
 
   // Первоначальный рендер
   renderProfile();
