@@ -761,7 +761,7 @@ const AdminPanel = {
   // Обучающий тур для Люды (Tour Slider)
   // ==========================================
   currentTourSlide: 1,
-  totalTourSlides: 4,
+  totalTourSlides: 5,
 
   openTour() {
     const modal = document.getElementById("tour-modal");

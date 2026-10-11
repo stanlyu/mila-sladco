@@ -460,7 +460,16 @@ document.addEventListener("DOMContentLoaded", () => {
       messengerUrl = `https://t.me/${cleanTg}?text=${encodedText}`;
     } else {
       const encodedText = encodeURIComponent(orderText);
-      messengerUrl = `https://max.ru/${cleanMax}?message=${encodedText}`;
+      let baseMax = rawMax;
+      if (!/^https?:\/\//i.test(baseMax)) {
+        if (/^(u|join)\//i.test(baseMax)) {
+          baseMax = `https://max.ru/${baseMax}`;
+        } else {
+          baseMax = `https://max.ru/u/${baseMax}`;
+        }
+      }
+      const sep = baseMax.includes("?") ? "&" : "?";
+      messengerUrl = `${baseMax}${sep}message=${encodedText}`;
     }
 
     currentMessengerUrl = messengerUrl;
@@ -549,15 +558,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const maxBtn = document.getElementById("link-btn-max");
     if (maxBtn) {
       maxBtn.style.display = (profile.showMaxDirect !== false) ? "flex" : "none";
-      const cleanMax = (profile.maxUsername || "").trim().replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "").replace(/[\s\-\(\)]/g, "");
-      if (cleanMax && cleanMax !== "none") {
-        maxBtn.href = `https://max.ru/${cleanMax}`;
+      const rawMax = (profile.maxUsername || "").trim();
+      if (rawMax && rawMax !== "none") {
+        let baseMax = rawMax;
+        if (!/^https?:\/\//i.test(baseMax)) {
+          if (/^(u|join)\//i.test(baseMax)) {
+            baseMax = `https://max.ru/${baseMax}`;
+          } else {
+            baseMax = `https://max.ru/u/${baseMax}`;
+          }
+        }
+        maxBtn.href = baseMax;
         maxBtn.onclick = null;
       } else {
         maxBtn.href = "javascript:void(0)";
         maxBtn.onclick = (e) => {
           e.preventDefault();
-          showToast("💡 Логин в MAX кондитер Люда укажет в своем кабинете");
+          showToast("💡 Ссылку на профиль в MAX кондитер Люда укажет в своем кабинете");
         };
       }
     }

@@ -155,22 +155,22 @@ const Cart = {
     const timeStr = formData.time ? ` (${formData.time})` : "";
     const deliveryMethod = formData.deliveryType === "pickup" ? "🚶 Самовывоз (Москва, м. Раменки)" : `🚚 Доставка: ${formData.address || "Адрес согласуем"}`;
     
-    let text = `🍰 *НОВЫЙ ЗАКАЗ — Mila_sladco*\n`;
+    let text = `🍰 НОВЫЙ ЗАКАЗ — Mila_sladco\n`;
     text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    text += `*Выбранные десерты:*\n`;
+    text += `Выбранные десерты:\n`;
 
     this.items.forEach((item, index) => {
-      text += `${index + 1}. *${item.title}*\n`;
-      text += `   • ${item.quantity} шт. × ${item.price} ₽ = *${item.quantity * item.price} ₽*\n`;
+      text += `${index + 1}. ${item.title}\n`;
+      text += `   • ${item.quantity} шт. × ${item.price} ₽ = ${item.quantity * item.price} ₽\n`;
     });
 
     text += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `💰 *ИТОГО К ОПЛАТЕ: ${this.getTotalPrice()} ₽*\n`;
+    text += `💰 ИТОГО К ОПЛАТЕ: ${this.getTotalPrice()} ₽\n`;
     text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    text += `📋 *Данные клиента:*\n`;
+    text += `📋 Данные клиента:\n`;
     text += `👤 Имя: ${formData.name || "Гость"}\n`;
-    text += `📱 Телефон / ник: ${formData.phone || "Не указан"}\n`;
+    text += `📱 Телефон / контакт: ${formData.phone || "Не указан"}\n`;
     text += `🗓 Желаемая дата: ${dateStr}${timeStr}\n`;
     text += `📍 Способ получения: ${deliveryMethod}\n`;
 
@@ -179,7 +179,7 @@ const Cart = {
     }
 
     text += `\n💬 Связь через: ${formData.messenger === "max" ? "MAX" : "Telegram"}\n`;
-    text += `_Заказ отправлен через витрину mila-sladco_`;
+    text += `Заказ сформирован через витрину mila-sladco.ru`;
 
     return text;
   }
