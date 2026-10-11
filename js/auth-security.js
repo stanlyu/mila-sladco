@@ -97,6 +97,7 @@ const AuthSecurity = {
   },
 
   logout() {
+    this.resetLock();
     try {
       if (typeof sessionStorage !== "undefined") {
         sessionStorage.removeItem(this.SESSION_KEY);
@@ -158,13 +159,14 @@ const AuthSecurity = {
   },
 
   changePin(currentPin, newPin) {
-    const check = this.verifyPin(currentPin);
-    if (!check.success) {
+    const currentHash = this.getStoredHash();
+    const inputHash = hashPin(String(currentPin).trim());
+    if (inputHash !== currentHash) {
       return { success: false, message: "Текущий PIN-код указан неверно" };
     }
 
-    if (!newPin || String(newPin).length < 4) {
-      return { success: false, message: "Новый PIN-код должен содержать минимум 4 цифры" };
+    if (!newPin || String(newPin).length !== 4) {
+      return { success: false, message: "Новый PIN-код должен состоять ровно из 4 цифр" };
     }
 
     const newHash = hashPin(String(newPin).trim());

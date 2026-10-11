@@ -65,6 +65,10 @@ const AdminPanel = {
   openPinModal() {
     const modal = document.getElementById("pin-modal");
     if (!modal) return;
+    const now = Date.now();
+    if (AuthSecurity.getLockUntil() <= now) {
+      AuthSecurity.setFailedAttempts(0);
+    }
     const pinInput = document.getElementById("pin-input-field");
     if (pinInput) {
       pinInput.value = "";
@@ -94,6 +98,14 @@ const AdminPanel = {
     if (!pin) {
       if (errBox) {
         errBox.textContent = "Пожалуйста, введите PIN-код";
+        errBox.style.display = "block";
+      }
+      return;
+    }
+
+    if (pin.length < 4) {
+      if (errBox) {
+        errBox.textContent = "PIN-код должен состоять ровно из 4 цифр";
         errBox.style.display = "block";
       }
       return;
@@ -349,18 +361,73 @@ const AdminPanel = {
     this.renderAdminList();
   },
 
-  // Смена PIN-кода Людой
-  promptChangePin() {
-    const oldPin = prompt("Введите текущий PIN-код (по умолчанию 1819):");
-    if (!oldPin) return;
-    const newPin = prompt("Введите новый PIN-код (минимум 4 цифры):");
-    if (!newPin) return;
+  // Смена PIN-кода Людой через модальное окно
+  openChangePinModal() {
+    const modal = document.getElementById("change-pin-modal");
+    if (!modal) return;
+    const oldInput = document.getElementById("pin-change-old");
+    const newInput = document.getElementById("pin-change-new");
+    const confirmInput = document.getElementById("pin-change-confirm");
+    if (oldInput) oldInput.value = "";
+    if (newInput) newInput.value = "";
+    if (confirmInput) confirmInput.value = "";
+    modal.classList.add("open");
+    setTimeout(() => {
+      if (oldInput) oldInput.focus();
+    }, 200);
+  },
+
+  closeChangePinModal() {
+    const modal = document.getElementById("change-pin-modal");
+    if (modal) modal.classList.remove("open");
+  },
+
+  submitChangePin() {
+    const oldInput = document.getElementById("pin-change-old");
+    const newInput = document.getElementById("pin-change-new");
+    const confirmInput = document.getElementById("pin-change-confirm");
+
+    const oldPin = oldInput ? oldInput.value.trim() : "";
+    const newPin = newInput ? newInput.value.trim() : "";
+    const confirmPin = confirmInput ? confirmInput.value.trim() : "";
+
+    if (!oldPin) {
+      showToast("Введите текущий PIN-код! ⚠️", 4000);
+      if (oldInput) oldInput.focus();
+      return;
+    }
+
+    const currentHash = AuthSecurity.getStoredHash();
+    if (hashPin(oldPin) !== currentHash) {
+      showToast("Текущий PIN-код указан неверно! ❌", 4000);
+      if (oldInput) {
+        oldInput.value = "";
+        oldInput.focus();
+      }
+      return;
+    }
+
+    if (!newPin || newPin.length !== 4) {
+      showToast("Новый PIN-код должен состоять ровно из 4 цифр! ⚠️", 4000);
+      if (newInput) newInput.focus();
+      return;
+    }
+
+    if (newPin !== confirmPin) {
+      showToast("Новый PIN-код и подтверждение не совпадают! ⚠️", 4000);
+      if (confirmInput) {
+        confirmInput.value = "";
+        confirmInput.focus();
+      }
+      return;
+    }
 
     const res = AuthSecurity.changePin(oldPin, newPin);
     if (res.success) {
-      showToast("PIN-код успешно изменен! 🔐");
+      this.closeChangePinModal();
+      showToast("PIN-код успешно изменен на новый! 🔐✨", 4000);
     } else {
-      showToast(res.message);
+      showToast(res.message, 4000);
     }
   },
 

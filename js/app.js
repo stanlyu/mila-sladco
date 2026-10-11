@@ -349,27 +349,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = document.getElementById("order-name").value.trim();
     const phone = document.getElementById("order-phone").value.trim();
     const date = document.getElementById("order-date").value;
-    const time = document.getElementById("order-time").value;
+    const timeSelect = document.getElementById("order-time").value;
+    const customTimeInput = document.getElementById("order-custom-time");
     const deliveryType = document.getElementById("order-delivery").value;
     const address = document.getElementById("order-address").value.trim();
     const comment = document.getElementById("order-comment").value.trim();
 
+    let time = timeSelect;
+    if (timeSelect === "custom") {
+      const customVal = customTimeInput ? customTimeInput.value.trim() : "";
+      time = customVal ? `К точному времени: ${customVal}` : "К точному времени (по согласованию)";
+    }
+
     if (!name) {
-      showToast("Пожалуйста, укажите ваше имя");
+      showToast("Пожалуйста, укажите ваше имя", 3500);
       document.getElementById("order-name").focus();
       return;
     }
 
     if (!phone) {
-      showToast("Пожалуйста, укажите контактный телефон или ник");
+      showToast("Пожалуйста, укажите контактный телефон или ник", 3500);
       document.getElementById("order-phone").focus();
       return;
     }
 
+    const todayStr = new Date().toISOString().split("T")[0];
+    const isToday = date === todayStr;
+    const dateDisplay = isToday ? `${date} (⚡ Срочно сегодня)` : date;
+
     const formData = {
       name,
       phone,
-      date,
+      date: dateDisplay,
       time,
       deliveryType,
       address,
@@ -384,7 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
       navigator.clipboard.writeText(orderText).catch(() => {});
     }
 
-    showToast("Формируем заказ и открываем чат...");
+    showToast("Формируем заказ и открываем чат...", 2500);
 
     setTimeout(() => {
       const profile = (typeof CatalogManager !== "undefined" && CatalogManager.getProfile) 
@@ -398,7 +409,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!targetUser || targetUser === "none" || targetUser === "mila_sladco") {
         Cart.clear();
         closeCart();
-        showToast("💡 Чек скопирован в буфер! Для отправки в свой " + (selectedMessenger === "telegram" ? "Telegram" : "MAX") + " укажите свой логин в Кабинете кондитера (3 тапа по фото) → «Контакты & ссылки».");
+        showToast("💡 Чек скопирован в буфер! Для отправки в свой " + (selectedMessenger === "telegram" ? "Telegram" : "MAX") + " укажите свой логин в Кабинете кондитера (3 тапа по фото) → «Контакты & ссылки».", 4500);
         return;
       }
 
@@ -414,19 +425,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
       Cart.clear();
       closeCart();
-      showToast("Заказ сформирован! Нажмите «Отправить» в мессенджере 💌");
+      showToast("Заказ сформирован! Нажмите «Отправить» в мессенджере 💌", 3500);
     }, 600);
   };
 
-  // Toast
-  window.showToast = (msg) => {
+  // Выбор даты "Срочно сегодня"
+  window.setOrderDateToday = () => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const orderDateInput = document.getElementById("order-date");
+    const todayBtn = document.getElementById("btn-order-today");
+    if (orderDateInput) {
+      orderDateInput.value = todayStr;
+    }
+    if (todayBtn) {
+      todayBtn.classList.add("active");
+    }
+    showToast("Выбрана сегодняшняя дата для срочного заказа ⚡", 3000);
+  };
+
+  // Переключение точного времени
+  window.toggleCustomTime = (val) => {
+    const customInput = document.getElementById("order-custom-time");
+    if (customInput) {
+      customInput.style.display = val === "custom" ? "block" : "none";
+      if (val === "custom") {
+        setTimeout(() => customInput.focus(), 100);
+      }
+    }
+  };
+
+  // Toast с настраиваемой длительностью (по умолчанию 3.5 - 4 секунды)
+  window.showToast = (msg, duration = 3800) => {
     if (!toastMsg) return;
     toastMsg.textContent = msg;
     toastMsg.classList.add("show");
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(() => {
       toastMsg.classList.remove("show");
-    }, 3200);
+    }, duration);
   };
 
   // Автоматическая блокировка скролла фона при открытых модалках
