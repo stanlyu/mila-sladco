@@ -525,14 +525,110 @@ document.addEventListener("DOMContentLoaded", () => {
     const phoneSub = document.getElementById("link-sub-phone");
     if (phoneBtn) {
       phoneBtn.style.display = profile.showPhone ? "flex" : "none";
-      if (profile.phoneClean || profile.phone) {
-        phoneBtn.href = `tel:${profile.phoneClean || profile.phone}`;
+      if (profile.protectPhone !== false) {
+        // Защита от спам-ботов активна: открываем интерактивный капча-тест
+        phoneBtn.href = "javascript:void(0)";
+        phoneBtn.onclick = (e) => {
+          e.preventDefault();
+          PhoneProtection.showModal();
+        };
+      } else {
+        // Защита отключена кондитером: прямой tel:
+        phoneBtn.onclick = null;
+        if (profile.phoneClean || profile.phone) {
+          phoneBtn.href = `tel:${profile.phoneClean || profile.phone}`;
+        }
       }
     }
     if (phoneSub && profile.phone) {
       phoneSub.textContent = `Если праздник уже сегодня: ${profile.phone}`;
     }
   }
+
+  // Защита номера телефона шефа от автоматических спам-ботов
+  const PhoneProtection = {
+    isVerified: false,
+
+    showModal() {
+      const modal = document.getElementById("phone-protect-modal");
+      if (!modal) return;
+      const profile = typeof CatalogManager !== "undefined" ? CatalogManager.getProfile() : null;
+      const phone = (profile && profile.phone) ? profile.phone : "+7 (915) 318-18-19";
+      const phoneClean = (profile && profile.phoneClean) ? profile.phoneClean : "+79153181819";
+
+      const numEl = document.getElementById("phone-protect-number");
+      const callBtn = document.getElementById("phone-protect-call-btn");
+      if (numEl) numEl.textContent = phone;
+      if (callBtn) callBtn.href = `tel:${phoneClean}`;
+
+      const challengeEl = document.getElementById("phone-protect-challenge");
+      const resultEl = document.getElementById("phone-protect-result");
+      const errBox = document.getElementById("phone-protect-error");
+
+      if (errBox) {
+        errBox.style.display = "none";
+        errBox.textContent = "";
+      }
+
+      if (this.isVerified) {
+        if (challengeEl) challengeEl.style.display = "none";
+        if (resultEl) resultEl.style.display = "block";
+      } else {
+        if (challengeEl) challengeEl.style.display = "block";
+        if (resultEl) resultEl.style.display = "none";
+      }
+
+      modal.classList.add("open");
+    },
+
+    closeModal() {
+      const modal = document.getElementById("phone-protect-modal");
+      if (modal) modal.classList.remove("open");
+    },
+
+    chooseOption(isCorrect) {
+      const errBox = document.getElementById("phone-protect-error");
+      if (!isCorrect) {
+        if (errBox) {
+          errBox.textContent = "Не совсем то! Выберите десерт 🍰, чтобы подтвердить, что вы человек.";
+          errBox.style.display = "block";
+        }
+        return;
+      }
+
+      this.isVerified = true;
+      const challengeEl = document.getElementById("phone-protect-challenge");
+      const resultEl = document.getElementById("phone-protect-result");
+      if (challengeEl) challengeEl.style.display = "none";
+      if (resultEl) {
+        resultEl.style.display = "block";
+      }
+      if (typeof showToast === "function") {
+        showToast("✅ Номер телефона открыт!");
+      }
+    },
+
+    copyNumber() {
+      const profile = typeof CatalogManager !== "undefined" ? CatalogManager.getProfile() : null;
+      const phone = (profile && profile.phone) ? profile.phone : "+7 (915) 318-18-19";
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(phone).then(() => {
+          if (typeof showToast === "function") {
+            showToast("📋 Номер скопирован в буфер обмена!");
+          }
+        }).catch(() => {
+          if (typeof showToast === "function") {
+            showToast(`Номер: ${phone}`);
+          }
+        });
+      } else {
+        if (typeof showToast === "function") {
+          showToast(`Номер: ${phone}`);
+        }
+      }
+    }
+  };
+  window.PhoneProtection = PhoneProtection;
 
   window.renderProfile = renderProfile;
   document.addEventListener("profile:updated", renderProfile);
@@ -543,6 +639,27 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCategories();
   renderProducts();
   renderTaplinkHits();
+
+  // Фоновая проверка актуальности базы данных (GitHub / Cloud)
+  if (typeof SyncService !== "undefined") {
+    SyncService.pullFromRemote().then((res) => {
+      if (res && res.success) {
+        renderProfile();
+        renderCategories();
+        renderProducts();
+        renderTaplinkHits();
+      }
+    }).catch((e) => {
+      console.warn("[App] Автосинхронизация базы:", e);
+    });
+  }
+
+  document.addEventListener("sync:completed", () => {
+    renderProfile();
+    renderCategories();
+    renderProducts();
+    renderTaplinkHits();
+  });
 
   // Автозаполнение даты: завтра по умолчанию
   const tomorrow = new Date();

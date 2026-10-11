@@ -84,3 +84,49 @@ test("AuthSecurity: кондитер может сменить PIN-код на �
   // Новый PIN успешно авторизует
   assert.strictEqual(AuthSecurity.verifyPin("9876").success, true);
 });
+
+test("AuthSecurity: восстановление PIN через 7 контрольных вопросов", () => {
+  AuthSecurity.init();
+  AuthSecurity.resetToDefault();
+  AuthSecurity.resetLock();
+  AuthSecurity.changePin("1819", "5555");
+  assert.strictEqual(AuthSecurity.verifyPin("5555").success, true);
+
+  // Ошибка, если отвечены не все вопросы
+  const incomplete = AuthSecurity.verifyAllSecurityQuestions(["Станислав", "Таисия"]);
+  assert.strictEqual(incomplete.success, false);
+
+  // Ошибка, если хотя бы один ответ неверен
+  const wrongAnswers = [
+    "Станислав",
+    "Таисия",
+    "Анастасия",
+    "Татьяна",
+    "Валерий",
+    "Станислав",
+    "Москва" // Неверно, училась в Богородске
+  ];
+  const wrongCheck = AuthSecurity.verifyAllSecurityQuestions(wrongAnswers);
+  assert.strictEqual(wrongCheck.success, false);
+  assert.strictEqual(wrongCheck.failedIndex, 6);
+
+  // Успех, если все 7 верны (проверка разного регистра и пробелов)
+  const validAnswers = [
+    "  станислав ",
+    "ТАИСИЯ",
+    "Анастасия",
+    "татьяна",
+    "валерий",
+    "Станислав",
+    "богородск"
+  ];
+  const recoveryResult = AuthSecurity.verifyAllSecurityQuestions(validAnswers);
+  assert.strictEqual(recoveryResult.success, true);
+  assert.strictEqual(recoveryResult.defaultPin, "1819");
+
+  // После восстановления PIN снова 1819, а 5555 больше не подходит
+  AuthSecurity.logout();
+  assert.strictEqual(AuthSecurity.verifyPin("5555").success, false);
+  assert.strictEqual(AuthSecurity.verifyPin("1819").success, true);
+});
+

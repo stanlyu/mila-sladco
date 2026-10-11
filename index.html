@@ -6,11 +6,16 @@
   <title>Mila_sladco — Авторские торты & корпусные пирожные в Москве</title>
   <meta name="description" content="Витрина кондитерской Mila_sladco. Авторские корпусные пирожные, бенто-торты и подарочные наборы с доставкой по Москве." />
   
+  <!-- Anti-Cache Meta Tags for Mobile Browsers -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  
   <!-- Favicon / Touch Icon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍰</text></svg>" />
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=2.4" />
 </head>
 <body>
 
@@ -103,17 +108,17 @@
           <span class="taplink-arrow">›</span>
         </button>
 
-        <!-- Кнопка 4: Срочный заказ / Звонок (скрыта по умолчанию для защиты от спам-ботов) -->
-        <a id="link-btn-phone" href="tel:+79153181819" class="taplink-btn btn-urgent" style="display: none;">
+        <!-- Кнопка 4: Срочный заказ / Звонок (с анти-бот защитой) -->
+        <button type="button" id="link-btn-phone" class="taplink-btn btn-urgent" style="display: none;" onclick="PhoneProtection.showModal()">
           <div class="taplink-btn-content">
             <div class="taplink-icon">📞</div>
             <div>
               <div class="taplink-text-title">Срочный заказ / Позвонить</div>
-              <div id="link-sub-phone" class="taplink-text-sub">Если праздник уже сегодня: +7 (915) 318-18-19</div>
+              <div id="link-sub-phone" class="taplink-text-sub">Нажмите для звонка кондитеру (защита от спама)</div>
             </div>
           </div>
           <span class="taplink-arrow">›</span>
-        </a>
+        </button>
 
       </div>
 
@@ -373,7 +378,8 @@
         <div id="pin-error-box" class="pin-error-box"></div>
 
         <div>
-          <input type="password" id="pin-input-field" class="pin-input" maxlength="4" inputmode="numeric" placeholder="••••" 
+          <input type="password" id="pin-input-field" class="pin-input" maxlength="4" inputmode="numeric" 
+            pattern="[0-9]*" autocomplete="one-time-code" placeholder="••••" 
             oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)"
             onkeydown="if(event.key==='Enter') AdminPanel.submitPin()" />
         </div>
@@ -383,13 +389,97 @@
         </button>
 
         <div style="margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-          <button type="button" class="btn-pin-reset-link" onclick="AdminPanel.resetPinToDefault()">
-            🔄 Сбросить PIN до дефолтного (1819)
+          <button type="button" class="btn-pin-reset-link" onclick="AdminPanel.openPinRecoveryModal()">
+            Забыли PIN-код? Восстановление доступа
           </button>
           <p style="font-size: 11px; color: var(--color-muted);">
             🔒 Доступ только для шеф-кондитера
           </p>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: ВОССТАНОВЛЕНИЕ ДОСТУПА ПО КОНТРОЛЬНЫМ ВОПРОСАМ
+       ======================================================== -->
+  <div id="pin-recovery-modal" class="modal-overlay" onclick="AdminPanel.closePinRecoveryModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      <button type="button" class="sheet-close-btn" onclick="AdminPanel.closePinRecoveryModal()" aria-label="Закрыть">✕</button>
+
+      <div style="padding: 0 20px 32px; max-height: 80vh; overflow-y: auto;">
+        <div style="text-align: center; margin-bottom: 14px;">
+          <div style="font-size: 34px; margin-bottom: 6px;">🛡️</div>
+          <h3 class="admin-sheet-title" style="margin-bottom: 4px;">Восстановление доступа</h3>
+          <p style="font-size: 12px; color: var(--color-muted);">
+            Для подтверждения личности кондитера ответьте на контрольные вопросы:
+          </p>
+        </div>
+
+        <div id="recovery-error-box" class="pin-error-box" style="display: none; margin-bottom: 14px;"></div>
+
+        <!-- Форма 7 контрольных вопросов -->
+        <div id="recovery-questions-form">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="rec-q-0">1. Полное имя супруга *</label>
+            <input type="text" id="rec-q-0" class="form-input" placeholder="Введите имя супруга" autocomplete="off" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="rec-q-1">2. Полное имя старшей дочери *</label>
+            <input type="text" id="rec-q-1" class="form-input" placeholder="Введите имя старшей дочери" autocomplete="off" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="rec-q-2">3. Полное имя младшей дочери *</label>
+            <input type="text" id="rec-q-2" class="form-input" placeholder="Введите имя младшей дочери" autocomplete="off" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="rec-q-3">4. Полное имя мамы *</label>
+            <input type="text" id="rec-q-3" class="form-input" placeholder="Введите имя мамы" autocomplete="off" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="rec-q-4">5. Полное имя папы *</label>
+            <input type="text" id="rec-q-4" class="form-input" placeholder="Введите имя папы" autocomplete="off" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="rec-q-5">6. Полное имя брата *</label>
+            <input type="text" id="rec-q-5" class="form-input" placeholder="Введите имя брата" autocomplete="off" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="rec-q-6">7. В каком городе вы (Людмила) учились в школе? *</label>
+            <input type="text" id="rec-q-6" class="form-input" placeholder="Введите только название города" autocomplete="off" />
+            <div style="font-size: 11px; color: var(--color-muted); margin-top: 3px;">
+              💡 В подсказку: ввести только название города.
+            </div>
+          </div>
+
+          <button type="button" class="btn-send-order max-style" style="margin-top: 8px;" onclick="AdminPanel.submitRecoveryQuestions()">
+            Проверить ответы и сбросить PIN
+          </button>
+        </div>
+
+        <!-- Экран успеха восстановления -->
+        <div id="recovery-success-box" style="display: none; text-align: center; padding: 10px 0;">
+          <div style="font-size: 40px; margin-bottom: 8px;">🎉</div>
+          <h4 style="font-size: 17px; font-weight: 700; color: var(--color-primary); margin-bottom: 8px;">
+            Личность подтверждена!
+          </h4>
+          <p style="font-size: 13px; color: var(--color-muted); line-height: 1.5; margin-bottom: 16px;">
+            Ваш PIN-код успешно сброшен до стандартного:<br />
+            <b style="font-size: 22px; color: var(--color-gold); letter-spacing: 2px;">1819</b><br />
+            <span style="font-size: 12px;">(последние 4 цифры вашего номера телефона)</span>
+          </p>
+          <button type="button" class="btn-send-order max-style" onclick="AdminPanel.applyRecoveredPin()">
+            Войти в кабинет кондитера ✨
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
@@ -433,6 +523,30 @@
               📸 Сменить фото шефа
               <input type="file" accept="image/*" style="display: none;" onchange="AdminPanel.handleChefAvatarUpload(this)" />
             </label>
+          </div>
+        </div>
+
+        <!-- Карточка синхронизации с базой данных GitHub / Cloud -->
+        <div class="admin-sync-card">
+          <div class="admin-sync-header">
+            <div class="admin-sync-status-wrap">
+              <span id="sync-status-indicator" class="sync-dot sync-dot-online"></span>
+              <div>
+                <div id="sync-status-title" class="admin-sync-title">База данных GitHub</div>
+                <div id="sync-status-desc" class="admin-sync-desc">Загрузка статуса...</div>
+              </div>
+            </div>
+            <button type="button" class="btn-sync-settings" onclick="AdminPanel.openDatabaseModal()" title="Настройки подключения к базе">
+              ⚙️ Настройки
+            </button>
+          </div>
+          <div class="admin-sync-actions">
+            <button type="button" class="btn-sync-action" onclick="AdminPanel.pullFromRemoteDatabase()">
+              🔄 Загрузить из GitHub
+            </button>
+            <button type="button" class="btn-sync-action btn-sync-push" onclick="AdminPanel.pushToRemoteDatabase()">
+              ☁️ Зафиксировать в базе
+            </button>
           </div>
         </div>
 
@@ -497,12 +611,13 @@
           <div class="tour-slide-icon">👩‍🍳</div>
           <h3 class="tour-slide-title">Добро пожаловать, Люда!</h3>
           <p class="tour-slide-desc">
-            Это ваш личный кабинет кондитера. Он скрыт от клиентов и доступен только вам.
+            Это ваш личный кабинет шеф-кондитера. Он скрыт от гостей сайта и позволяет управлять витриной в 1 клик.
           </p>
           <div class="tour-slide-steps">
-            <div>🔑 <b>Секретный вход:</b> 3 быстрых тапа по вашей аватарке вверху сайта.</div>
-            <div>🔢 <b>Ваш PIN-код:</b> <code>1819</code> (последние 4 цифры телефона).</div>
-            <div>📱 <b>Все под рукой:</b> управляйте витриной прямо с мобильного телефона без компьютера!</div>
+            <div>📱 <b>Все со смартфона:</b> меняйте витрину прямо с телефона на кухне — компьютер не нужен!</div>
+            <div>⚡ <b>Мгновенное обновление:</b> десерты, цены и фото обновляются на сайте сразу же.</div>
+            <div>💬 <b>Заказы прямо в чат:</b> клиенты собирают корзину, а вам в MAX и Telegram приходит подробный чек.</div>
+            <div>💡 <b>Подсказки на кнопках:</b> нажимайте значок «?», чтобы узнать назначение любой кнопки.</div>
           </div>
         </div>
 
@@ -558,8 +673,12 @@
           <span class="tour-dot" onclick="AdminPanel.goToTourSlide(4)"></span>
         </div>
         <div class="tour-nav-btns">
-          <button type="button" id="tour-btn-prev" class="btn-tour-nav" onclick="AdminPanel.prevTourSlide()" style="display: none;">← Назад</button>
-          <button type="button" id="tour-btn-next" class="btn-tour-nav btn-tour-primary" onclick="AdminPanel.nextTourSlide()">Далее →</button>
+          <button type="button" id="tour-btn-prev" class="btn-tour-nav btn-tour-prev" onclick="AdminPanel.prevTourSlide()" style="display: none;">
+            <span>←</span> <span>Назад</span>
+          </button>
+          <button type="button" id="tour-btn-next" class="btn-tour-nav btn-tour-primary btn-tour-next" onclick="AdminPanel.nextTourSlide()">
+            <span id="tour-btn-next-text">Далее</span> <span>→</span>
+          </button>
         </div>
       </div>
     </div>
@@ -594,21 +713,24 @@
         <!-- Текущий PIN -->
         <div class="form-group">
           <label class="form-label" for="pin-change-old">Текущий PIN-код</label>
-          <input type="password" id="pin-change-old" class="form-input" maxlength="4" inputmode="numeric" 
+          <input type="password" id="pin-change-old" name="pin-current" class="form-input" maxlength="4" 
+            inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
             placeholder="••••" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)" />
         </div>
 
         <!-- Новый PIN -->
         <div class="form-group">
           <label class="form-label" for="pin-change-new">Новый PIN-код (ровно 4 цифры)</label>
-          <input type="password" id="pin-change-new" class="form-input" maxlength="4" inputmode="numeric" 
+          <input type="password" id="pin-change-new" name="pin-code-new" class="form-input" maxlength="4" 
+            inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
             placeholder="••••" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)" />
         </div>
 
         <!-- Подтверждение нового PIN -->
         <div class="form-group">
           <label class="form-label" for="pin-change-confirm">Повторите новый PIN-код</label>
-          <input type="password" id="pin-change-confirm" class="form-input" maxlength="4" inputmode="numeric" 
+          <input type="password" id="pin-change-confirm" name="pin-code-repeat" class="form-input" maxlength="4" 
+            inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
             placeholder="••••" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)" />
         </div>
 
@@ -636,28 +758,46 @@
         <!-- Telegram username -->
         <div class="form-group">
           <label class="form-label" for="setting-tg-user">Логин в Telegram (куда отправлять заказы)</label>
-          <input type="text" id="setting-tg-user" class="form-input" placeholder="например: stanlyu или @stanlyu" />
-          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px;">
-            💡 Укажите свой личный логин на время тестов, чтобы сообщения приходили вам, а не Люде.
+          <input type="text" id="setting-tg-user" class="form-input" placeholder="например: mila_sladco" />
+          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
+            💡 <b>Где найти логин:</b> В приложении Telegram откройте <i>Настройки → Изменить профиль (или Настройки чатов) → Имя пользователя (@username)</i>.
           </div>
         </div>
 
         <!-- Telegram channel -->
         <div class="form-group">
           <label class="form-label" for="setting-tg-channel">Ссылка на Telegram-канал (кнопка в шапке)</label>
-          <input type="text" id="setting-tg-channel" class="form-input" placeholder="https://t.me/mila_sladco_cakes" />
+          <input type="text" id="setting-tg-channel" class="form-input" placeholder="https://t.me/mila_sladco1 или ссылка-приглашение" />
+          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
+            📢 <b>Как получить ссылку:</b> Откройте ваш канал в Telegram → нажмите на имя канала вверху → <i>«Изменить» (значок карандаша) → «Тип канала»</i>. Скопируйте публичную ссылку (<code>https://t.me/...</code>) или ссылку-приглашение (<code>https://t.me/+...</code>).
+          </div>
         </div>
 
         <!-- MAX username -->
         <div class="form-group">
-          <label class="form-label" for="setting-max-user">Логин в MAX Messenger</label>
-          <input type="text" id="setting-max-user" class="form-input" placeholder="например: mila_sladco" />
+          <label class="form-label" for="setting-max-user">Логин / телефон в MAX Messenger</label>
+          <input type="text" id="setting-max-user" class="form-input" placeholder="например: mila_sladco или +79153181819" />
+          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
+            💡 <b>Где найти:</b> В приложении MAX откройте <i>Профиль / Настройки</i>. Укажите логин или привязанный номер телефона.
+          </div>
+        </div>
+
+        <!-- MAX channel -->
+        <div class="form-group">
+          <label class="form-label" for="setting-max-channel">Ссылка на канал или группу в MAX</label>
+          <input type="text" id="setting-max-channel" class="form-input" placeholder="https://max.ru/join/..." />
+          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
+            📢 <b>Как получить ссылку:</b> В приложении MAX откройте канал или группу → нажмите на название вверху → <i>«Ссылка на канал» / «Пригласить по ссылке»</i> → «Скопировать ссылку».
+          </div>
         </div>
 
         <!-- Телефон -->
         <div class="form-group">
-          <label class="form-label" for="setting-phone">Контактный номер телефона</label>
+          <label class="form-label" for="setting-phone">Рабочий контактный номер телефона</label>
           <input type="tel" id="setting-phone" class="form-input" placeholder="+7 (915) 318-18-19" />
+          <div style="font-size: 11px; color: #9A6700; margin-top: 4px; line-height: 1.4; background: #FFF8E6; padding: 8px 10px; border-radius: 8px; border: 1px solid #FFE29A;">
+            ⚠️ <b>Рекомендация:</b> Во избежание спама указывайте отдельный рабочий номер для заказов, а не личный семейный номер.
+          </div>
         </div>
 
         <!-- Защита от спам-ботов -->
@@ -665,9 +805,9 @@
           <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
             <input type="checkbox" id="setting-show-phone" style="width: 20px; height: 20px; margin-top: 2px;" />
             <div>
-              <div>Показывать кнопку звонка на главной странице</div>
+              <div>Разрешить звонки с сайта (кнопка «Позвонить кондитеру»)</div>
               <div style="font-size: 11px; color: var(--color-muted); font-weight: normal; margin-top: 3px; line-height: 1.4;">
-                🛡️ <b>Защита от спам-ботов</b>: если выключить, личный номер телефона будет скрыт от автосборщиков в интернете. Покупатели смогут безопасно писать только в чаты MAX и Telegram.
+                🛡️ <b>Встроенная анти-бот защита:</b> номер скрыт от парсеров. Чтобы позвонить, гость нажимает кнопку и проходит быстрый человеческий тест (выбрать десерт среди иконок). Это блокирует роботов и автодозвонщиков.
               </div>
             </div>
           </label>
@@ -676,6 +816,119 @@
         <button type="button" class="btn-send-order max-style" style="margin-top: 16px;" onclick="AdminPanel.saveContacts()">
           💾 Сохранить контакты
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: НАСТРОЙКИ СИНХРОНИЗАЦИИ С GITHUB / БАЗОЙ
+       ======================================================== -->
+  <div id="database-settings-modal" class="modal-overlay" onclick="AdminPanel.closeDatabaseModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      <button type="button" class="sheet-close-btn" onclick="AdminPanel.closeDatabaseModal()" aria-label="Закрыть">✕</button>
+
+      <div style="padding: 0 20px 32px; max-height: 80vh; overflow-y: auto;">
+        <h3 class="admin-sheet-title" style="margin-bottom: 6px;">☁️ База данных GitHub</h3>
+        <p style="font-size: 13px; color: var(--color-muted); line-height: 1.45; margin-bottom: 16px;">
+          Чтобы изменения цен, десертов и контактов мгновенно отображались у всех покупателей на сайте, подключите запись в репозиторий GitHub.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label" for="sync-setting-repo">Репозиторий GitHub</label>
+          <input type="text" id="sync-setting-repo" class="form-input" value="stanlyu/mila-sladco" placeholder="owner/repo" />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label" for="sync-setting-branch">Ветка репозитория</label>
+          <input type="text" id="sync-setting-branch" class="form-input" value="main" placeholder="main" />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="form-label" for="sync-setting-token" style="margin-bottom: 0;">GitHub Token (PAT)</label>
+            <button type="button" onclick="AdminPanel.toggleTokenVisibility()" style="background: none; border: none; font-size: 11px; color: var(--color-gold); font-weight: 600; cursor: pointer;">
+              👁️ <span id="token-toggle-label">Показать</span>
+            </button>
+          </div>
+          <input type="password" id="sync-setting-token" class="form-input" placeholder="ghp_... или github_pat_..." autocomplete="off" />
+          <div style="font-size: 11px; color: var(--color-muted); line-height: 1.4; margin-top: 6px;">
+            🔑 <b>Как получить токен за 1 минуту:</b> В GitHub перейдите в <i>Settings → Developer Settings → Personal access tokens → Fine-grained tokens</i>. Выберите репозиторий <b>mila-sladco</b> и право <b>Contents: Read and write</b>.
+          </div>
+        </div>
+
+        <div id="sync-test-result" style="display: none; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 12px; margin-bottom: 14px;"></div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" class="btn-send-order max-style" onclick="AdminPanel.saveDatabaseSettings()">
+            💾 Сохранить настройки
+          </button>
+          <button type="button" class="btn-admin-secondary" onclick="AdminPanel.testDatabaseConnection()">
+            ⚡ Проверить подключение к GitHub
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       МОДАЛЬНОЕ ОКНО: ЗАЩИТА ТЕЛЕФОНА ОТ БОТОВ И СПАМА
+       ======================================================== -->
+  <div id="phone-protect-modal" class="modal-overlay" onclick="PhoneProtection.closeModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      <button type="button" class="sheet-close-btn" onclick="PhoneProtection.closeModal()" aria-label="Закрыть">✕</button>
+
+      <div style="padding: 0 20px 32px; text-align: center;">
+        <!-- Тест на человека -->
+        <div id="phone-protect-challenge">
+          <div style="font-size: 38px; margin-bottom: 8px;">🛡️</div>
+          <h3 class="admin-sheet-title" style="margin-bottom: 6px;">Защита от спам-звонков</h3>
+          <p style="font-size: 13px; color: var(--color-muted); line-height: 1.4; margin-bottom: 16px;">
+            Чтобы открыть номер кондитера, подтвердите, что вы человек. Выберите <b>сладкий десерт</b> среди картинок:
+          </p>
+
+          <div id="phone-protect-error" class="pin-error-box" style="display: none; margin-bottom: 12px;"></div>
+
+          <div class="captcha-grid">
+            <button type="button" class="captcha-btn" onclick="PhoneProtection.chooseOption(false)">
+              <span class="captcha-icon">🚗</span>
+              <span class="captcha-label">Машина</span>
+            </button>
+            <button type="button" class="captcha-btn" onclick="PhoneProtection.chooseOption(true)">
+              <span class="captcha-icon">🍰</span>
+              <span class="captcha-label">Десерт</span>
+            </button>
+            <button type="button" class="captcha-btn" onclick="PhoneProtection.chooseOption(false)">
+              <span class="captcha-icon">🐶</span>
+              <span class="captcha-label">Щенок</span>
+            </button>
+            <button type="button" class="captcha-btn" onclick="PhoneProtection.chooseOption(false)">
+              <span class="captcha-icon">⚽</span>
+              <span class="captcha-label">Мяч</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Результат: номер открыт для звонка -->
+        <div id="phone-protect-result" style="display: none;">
+          <div style="font-size: 38px; margin-bottom: 8px;">📞</div>
+          <h3 class="admin-sheet-title" style="margin-bottom: 6px;">Связь с кондитером</h3>
+          <p style="font-size: 13px; color: var(--color-muted); margin-bottom: 14px;">
+            Прямой рабочий номер кондитерской Mila_sladco:
+          </p>
+          <div id="phone-protect-number" class="phone-display-box">+7 (915) 318-18-19</div>
+          
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 18px;">
+            <a id="phone-protect-call-btn" href="tel:+79153181819" class="btn-send-order max-style" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>📞</span> <span>Позвонить прямо сейчас</span>
+            </a>
+            <button type="button" class="btn-admin-secondary" onclick="PhoneProtection.copyNumber()" style="width: 100%;">
+              📋 Скопировать номер телефона
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -695,7 +948,7 @@
         <div class="form-group">
           <label class="form-label">Фотография десерта (из галереи телефона или камера)</label>
           <div class="upload-preview-box">
-            <img id="form-edit-preview-img" src="assets/images/mango-passion.jpg" alt="Превью" class="preview-thumb-large" />
+            <img id="form-edit-preview-img" src="assets/images/placeholder-dessert.svg" alt="Превью" class="preview-thumb-large" />
             <div>
               <label class="file-input-btn">
                 📸 Выбрать фото
@@ -717,11 +970,16 @@
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label" for="form-edit-price">Цена (в рублях) *</label>
-            <input type="number" id="form-edit-price" class="form-input" placeholder="450" required />
+            <input type="text" id="form-edit-price" class="form-input" inputmode="numeric" pattern="[0-9]*" 
+              placeholder="450" required oninput="this.value=this.value.replace(/\D/g,'')" />
           </div>
           <div class="form-group">
-            <label class="form-label" for="form-edit-weight">Вес десерта</label>
-            <input type="text" id="form-edit-weight" class="form-input" placeholder="115 г" />
+            <label class="form-label" for="form-edit-weight">Вес десерта (в граммах)</label>
+            <input type="text" id="form-edit-weight" class="form-input" inputmode="numeric" pattern="[0-9]*" 
+              placeholder="110" oninput="this.value=this.value.replace(/\D/g,'')" />
+            <div style="font-size: 10px; color: var(--color-muted); margin-top: 2px;">
+              Только цифры (10 кг = 10000)
+            </div>
           </div>
         </div>
 
@@ -762,11 +1020,12 @@
   <div id="toast-msg" class="toast-msg"></div>
 
   <!-- Scripts (подключение модулей архитектуры) -->
-  <script src="js/catalog-manager.js"></script>
-  <script src="js/auth-security.js"></script>
-  <script src="js/admin.js"></script>
-  <script src="js/cart.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/catalog-manager.js?v=2.4"></script>
+  <script src="js/sync-service.js?v=2.4"></script>
+  <script src="js/auth-security.js?v=2.4"></script>
+  <script src="js/admin.js?v=2.4"></script>
+  <script src="js/cart.js?v=2.4"></script>
+  <script src="js/app.js?v=2.4"></script>
 
 </body>
 </html>

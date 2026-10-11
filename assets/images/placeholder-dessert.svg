@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDFBF7"/>
+      <stop offset="100%" stop-color="#F2EBE1"/>
+    </linearGradient>
+    <linearGradient id="cakeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E2D4C3"/>
+      <stop offset="100%" stop-color="#CCAFA0"/>
+    </linearGradient>
+    <linearGradient id="goldAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#AA7C11"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="400" fill="url(#bgGrad)"/>
+  
+  <!-- Outer subtle circular plate -->
+  <circle cx="200" cy="200" r="145" fill="#FFFFFF" stroke="#EAE0D5" stroke-width="2"/>
+  <circle cx="200" cy="200" r="135" fill="none" stroke="#F5ECE3" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+  <!-- Cake Stand / Base Shadow -->
+  <ellipse cx="200" cy="256" rx="72" ry="12" fill="#E8DDD3"/>
+
+  <!-- Cake Base Layers -->
+  <g transform="translate(130, 150)">
+    <!-- Bottom sponge layer -->
+    <rect x="15" y="65" width="110" height="30" rx="6" fill="#C9A88F"/>
+    <!-- Cream layer -->
+    <rect x="15" y="55" width="110" height="14" rx="4" fill="#FFFBF5"/>
+    <!-- Top mousse layer -->
+    <path d="M 15 55 Q 70 42 125 55 L 125 35 Q 70 20 15 35 Z" fill="url(#cakeGrad)"/>
+    <!-- Glossy Glaze top -->
+    <ellipse cx="70" cy="35" rx="55" ry="16" fill="#D9BAA3"/>
+    <ellipse cx="70" cy="33" rx="48" ry="12" fill="#ECD9CB"/>
+    
+    <!-- Delicate Berry / Cherry on top -->
+    <circle cx="70" cy="18" r="11" fill="#C94A4A"/>
+    <ellipse cx="67" cy="15" rx="3.5" ry="2" fill="#FFA5A5" transform="rotate(-30 67 15)"/>
+    <!-- Mint leaf -->
+    <path d="M 74 15 C 84 10 88 4 92 6 C 92 12 85 16 76 16 Z" fill="#7EA172"/>
+    <!-- Gold foil sparkle -->
+    <path d="M 60 25 L 62 21 L 66 23 L 62 25 L 64 29 L 60 27 Z" fill="url(#goldAccent)"/>
+  </g>
+
+  <!-- Camera/Photo upload indicator badge -->
+  <g transform="translate(160, 275)">
+    <rect x="0" y="0" width="80" height="26" rx="13" fill="#3D342D" opacity="0.85"/>
+    <!-- Camera icon -->
+    <path d="M 16 16 L 20 10 L 28 10 L 32 16 Z" fill="#FFFFFF"/>
+    <rect x="14" y="14" width="20" height="14" rx="2" fill="#FFFFFF"/>
+    <circle cx="24" cy="21" r="4" fill="#3D342D"/>
+    <!-- Plus symbol -->
+    <path d="M 44 21 L 56 21 M 50 15 L 50 27" stroke="#D4AF37" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Text hint -->
+  <text x="200" y="325" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#8C7A6B">
+    Добавьте фото десерта
+  </text>
+  <text x="200" y="343" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" fill="#B3A294">
+    или оставьте этот плейсхолдер
+  </text>
+</svg>

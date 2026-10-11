@@ -193,6 +193,112 @@ const AuthSecurity = {
     }
 
     return { success: true, message: "PIN-код успешно изменен!" };
+  },
+
+  // ========================================================
+  // Восстановление доступа через контрольные вопросы
+  // ========================================================
+  normalizeAnswer(str) {
+    return String(str || "")
+      .trim()
+      .toLowerCase()
+      .replace(/ё/g, "е")
+      .replace(/[^a-zа-я0-9]/gi, "");
+  },
+
+  getSecurityQuestions() {
+    return [
+      {
+        id: "spouse",
+        question: "Полное имя супруга",
+        placeholder: "Введите имя супруга",
+        hint: "Например: Иван"
+      },
+      {
+        id: "daughter_oldest",
+        question: "Полное имя старшей дочери",
+        placeholder: "Введите имя старшей дочери",
+        hint: "Например: Анна"
+      },
+      {
+        id: "daughter_youngest",
+        question: "Полное имя младшей дочери",
+        placeholder: "Введите имя младшей дочери",
+        hint: "Например: Мария"
+      },
+      {
+        id: "mother",
+        question: "Полное имя мамы",
+        placeholder: "Введите имя мамы",
+        hint: "Например: Ольга"
+      },
+      {
+        id: "father",
+        question: "Полное имя папы",
+        placeholder: "Введите имя папы",
+        hint: "Например: Сергей"
+      },
+      {
+        id: "brother",
+        question: "Полное имя брата",
+        placeholder: "Введите имя брата",
+        hint: "Например: Алексей"
+      },
+      {
+        id: "school_city",
+        question: "В каком городе вы (Людмила) учились в школе?",
+        placeholder: "Введите только название города",
+        hint: "Только название города, без слова «г.» или «город»"
+      }
+    ];
+  },
+
+  getSecurityAnswers() {
+    return [
+      ["станислав"],
+      ["таисия"],
+      ["анастасия"],
+      ["татьяна"],
+      ["валерий"],
+      ["станислав"],
+      ["богородск"]
+    ];
+  },
+
+  verifySecurityQuestion(index, answer) {
+    const answersList = this.getSecurityAnswers();
+    if (index < 0 || index >= answersList.length) {
+      return { success: false, message: "Неверный номер вопроса" };
+    }
+    const validVariants = answersList[index];
+    const userNorm = this.normalizeAnswer(answer);
+    const isMatch = validVariants.some((v) => this.normalizeAnswer(v) === userNorm);
+    if (isMatch) {
+      return { success: true };
+    }
+    return { success: false, message: "Ответ не совпадает. Проверьте правильность написания." };
+  },
+
+  verifyAllSecurityQuestions(answersArray) {
+    const answersList = this.getSecurityAnswers();
+    if (!Array.isArray(answersArray) || answersArray.length !== answersList.length) {
+      return { success: false, message: "Пожалуйста, ответьте на все 7 вопросов." };
+    }
+
+    for (let i = 0; i < answersList.length; i++) {
+      const check = this.verifySecurityQuestion(i, answersArray[i]);
+      if (!check.success) {
+        return { success: false, failedIndex: i, message: `Вопрос №${i + 1}: ответ указан неверно.` };
+      }
+    }
+
+    // Все 7 вопросов отвечены верно: сбрасываем PIN до дефолтного 1819 и снимаем блокировку
+    this.resetToDefault();
+    return {
+      success: true,
+      defaultPin: "1819",
+      message: "Личность шеф-кондитера подтверждена! PIN-код сброшен до стандартного (1819)."
+    };
   }
 };
 

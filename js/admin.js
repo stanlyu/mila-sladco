@@ -141,6 +141,7 @@ const AdminPanel = {
     if (!modal) return;
     this.updateChefAvatarPreview();
     this.renderAdminList();
+    this.updateSyncCardStatus();
     modal.classList.add("open");
 
     // Если Люда впервые в кабинете — запускаем интерактивный тур
@@ -165,15 +166,32 @@ const AdminPanel = {
     }
   },
 
-  handleChefAvatarUpload(input) {
+  async handleChefAvatarUpload(input) {
     if (input.files && input.files[0]) {
       const file = input.files[0];
+      try {
+        if (typeof SyncService !== "undefined" && typeof SyncService.compressImage === "function") {
+          const compressed = await SyncService.compressImage(file, 400, 0.85);
+          CatalogManager.updateProfile({ avatar: compressed });
+          this.updateChefAvatarPreview();
+          showToast("Фото шеф-кондитера обновлено! 📸✨");
+          if (SyncService.hasWriteAccess()) {
+            SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
+          }
+          return;
+        }
+      } catch (e) {
+        console.warn("Сжатие аватарки не удалось, загрузка оригинала", e);
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64Url = e.target.result;
         CatalogManager.updateProfile({ avatar: base64Url });
         this.updateChefAvatarPreview();
         showToast("Фото шеф-кондитера успешно обновлено! 📸✨");
+        if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
+          SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -230,12 +248,18 @@ const AdminPanel = {
     }
     CatalogManager.updateProduct(id, { price: priceNum });
     showToast("Цена успешно обновлена! ✨");
+    if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
+      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then(() => this.updateSyncCardStatus());
+    }
   },
 
   toggleStatus(id) {
     const newStatus = CatalogManager.toggleAvailability(id);
     this.renderAdminList();
     showToast(newStatus ? "Десерт снова на витрине!" : "Десерт скрыт с витрины (закончился)");
+    if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
+      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then(() => this.updateSyncCardStatus());
+    }
   },
 
   deleteProduct(id) {
@@ -245,6 +269,9 @@ const AdminPanel = {
       CatalogManager.deleteProduct(id);
       this.renderAdminList();
       showToast("Десерт удален");
+      if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
+        SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then(() => this.updateSyncCardStatus());
+      }
     }
   },
 
@@ -254,13 +281,13 @@ const AdminPanel = {
     document.getElementById("edit-modal-title").textContent = "✨ Добавить новый десерт";
     document.getElementById("form-edit-title").value = "";
     document.getElementById("form-edit-price").value = "450";
-    document.getElementById("form-edit-weight").value = "110 г";
+    document.getElementById("form-edit-weight").value = "110";
     document.getElementById("form-edit-cat").value = "pastry";
     document.getElementById("form-edit-badge").value = "Новинка";
     document.getElementById("form-edit-desc").value = "";
     document.getElementById("form-edit-ingredients").value = "";
-    document.getElementById("form-edit-preview-img").src = "assets/images/mango-passion.jpg";
-    document.getElementById("form-edit-image-url").value = "assets/images/mango-passion.jpg";
+    document.getElementById("form-edit-preview-img").src = "assets/images/placeholder-dessert.svg";
+    document.getElementById("form-edit-image-url").value = "assets/images/placeholder-dessert.svg";
 
     document.getElementById("admin-edit-modal").classList.add("open");
   },
@@ -271,16 +298,19 @@ const AdminPanel = {
     if (!product) return;
 
     this.editingProductId = id;
+    const cleanWeight = product.weight ? String(product.weight).replace(/\D/g, "") : "110";
+    const prodImg = product.image || "assets/images/placeholder-dessert.svg";
+
     document.getElementById("edit-modal-title").textContent = `✏️ Редактирование: ${product.title}`;
     document.getElementById("form-edit-title").value = product.title;
     document.getElementById("form-edit-price").value = product.price;
-    document.getElementById("form-edit-weight").value = product.weight || "110 г";
+    document.getElementById("form-edit-weight").value = cleanWeight;
     document.getElementById("form-edit-cat").value = product.category || "pastry";
     document.getElementById("form-edit-badge").value = product.badge || "";
     document.getElementById("form-edit-desc").value = product.fullDesc || product.shortDesc || "";
     document.getElementById("form-edit-ingredients").value = product.ingredients || "";
-    document.getElementById("form-edit-preview-img").src = product.image;
-    document.getElementById("form-edit-image-url").value = product.image;
+    document.getElementById("form-edit-preview-img").src = prodImg;
+    document.getElementById("form-edit-image-url").value = prodImg;
 
     document.getElementById("admin-edit-modal").classList.add("open");
   },
@@ -292,18 +322,27 @@ const AdminPanel = {
   },
 
   // Загрузка фото с телефона/компьютера
-  handleImageUpload(input) {
+  async handleImageUpload(input) {
     if (input.files && input.files[0]) {
       const file = input.files[0];
+      try {
+        if (typeof SyncService !== "undefined" && typeof SyncService.compressImage === "function") {
+          const compressed = await SyncService.compressImage(file, 900, 0.82);
+          document.getElementById("form-edit-preview-img").src = compressed;
+          document.getElementById("form-edit-image-url").value = compressed;
+          showToast("Фото десерта оптимизировано и загружено! 📸✨");
+          return;
+        }
+      } catch (err) {
+        console.warn("Сжатие не удалось, загрузка оригинала", err);
+      }
       const reader = new FileReader();
-
       reader.onload = (e) => {
         const base64Url = e.target.result;
         document.getElementById("form-edit-preview-img").src = base64Url;
         document.getElementById("form-edit-image-url").value = base64Url;
         showToast("Фото успешно загружено! 📸");
       };
-
       reader.readAsDataURL(file);
     }
   },
@@ -311,13 +350,15 @@ const AdminPanel = {
   // Сохранение формы
   saveProductForm() {
     const title = document.getElementById("form-edit-title").value.trim();
-    const price = parseInt(document.getElementById("form-edit-price").value, 10);
-    const weight = document.getElementById("form-edit-weight").value.trim();
+    const priceDigits = document.getElementById("form-edit-price").value.replace(/\D/g, "");
+    const price = parseInt(priceDigits, 10);
+    const weightDigits = document.getElementById("form-edit-weight").value.replace(/\D/g, "");
+    const weight = weightDigits ? `${weightDigits} г` : "110 г";
     const category = document.getElementById("form-edit-cat").value;
     const badge = document.getElementById("form-edit-badge").value.trim();
     const desc = document.getElementById("form-edit-desc").value.trim();
     const ingredients = document.getElementById("form-edit-ingredients").value.trim();
-    const image = document.getElementById("form-edit-image-url").value;
+    const image = document.getElementById("form-edit-image-url").value || "assets/images/placeholder-dessert.svg";
 
     if (!title) {
       showToast("Пожалуйста, введите название десерта");
@@ -325,7 +366,7 @@ const AdminPanel = {
     }
 
     if (isNaN(price) || price <= 0) {
-      showToast("Укажите правильную цену");
+      showToast("Укажите правильную цену (только цифры)");
       return;
     }
 
@@ -359,6 +400,16 @@ const AdminPanel = {
 
     this.closeEditModal();
     this.renderAdminList();
+
+    // Автоматическая фиксация в базе данных GitHub при настроенном доступе
+    if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
+      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then((r) => {
+        if (r.success) {
+          showToast("База данных GitHub обновлена! ☁️✨");
+          this.updateSyncCardStatus();
+        }
+      });
+    }
   },
 
   // Смена PIN-кода Людой через модальное окно
@@ -458,19 +509,78 @@ const AdminPanel = {
     }
   },
 
-  // Сброс PIN-кода до дефолтного (1819)
-  resetPinToDefault() {
-    AuthSecurity.resetToDefault();
-    const pinInput = document.getElementById("pin-input-field");
-    const errBox = document.getElementById("pin-error-box");
-    if (pinInput) {
-      pinInput.value = "1819";
-      pinInput.focus();
+  // ==========================================
+  // Восстановление PIN через 7 контрольных вопросов
+  // ==========================================
+  openPinRecoveryModal() {
+    this.closePinModal();
+    const modal = document.getElementById("pin-recovery-modal");
+    if (!modal) return;
+    
+    // Очищаем поля
+    for (let i = 0; i < 7; i++) {
+      const input = document.getElementById(`rec-q-${i}`);
+      if (input) input.value = "";
     }
+    const errBox = document.getElementById("recovery-error-box");
     if (errBox) {
+      errBox.textContent = "";
       errBox.style.display = "none";
     }
-    showToast("PIN-код сброшен до стандартного (1819) 🔑", 4000);
+    const formBox = document.getElementById("recovery-questions-form");
+    const successBox = document.getElementById("recovery-success-box");
+    if (formBox) formBox.style.display = "block";
+    if (successBox) successBox.style.display = "none";
+
+    modal.classList.add("open");
+    setTimeout(() => {
+      const firstInput = document.getElementById("rec-q-0");
+      if (firstInput) firstInput.focus();
+    }, 200);
+  },
+
+  closePinRecoveryModal() {
+    const modal = document.getElementById("pin-recovery-modal");
+    if (modal) modal.classList.remove("open");
+  },
+
+  submitRecoveryQuestions() {
+    const answers = [];
+    for (let i = 0; i < 7; i++) {
+      const input = document.getElementById(`rec-q-${i}`);
+      answers.push(input ? input.value : "");
+    }
+
+    const errBox = document.getElementById("recovery-error-box");
+    const res = AuthSecurity.verifyAllSecurityQuestions(answers);
+
+    if (res.success) {
+      if (errBox) errBox.style.display = "none";
+      const formBox = document.getElementById("recovery-questions-form");
+      const successBox = document.getElementById("recovery-success-box");
+      if (formBox) formBox.style.display = "none";
+      if (successBox) successBox.style.display = "block";
+      showToast("Личность подтверждена! PIN сброшен до 1819 🔐✨", 4000);
+    } else {
+      if (errBox) {
+        errBox.textContent = res.message;
+        errBox.style.display = "block";
+      }
+      if (typeof res.failedIndex === "number") {
+        const failInput = document.getElementById(`rec-q-${res.failedIndex}`);
+        if (failInput) failInput.focus();
+      }
+    }
+  },
+
+  applyRecoveredPin() {
+    this.closePinRecoveryModal();
+    this.openPinModal();
+    const pinInput = document.getElementById("pin-input-field");
+    if (pinInput) {
+      pinInput.value = "1819";
+      setTimeout(() => this.submitPin(), 300);
+    }
   },
 
   // ==========================================
@@ -483,12 +593,14 @@ const AdminPanel = {
     const tgUser = document.getElementById("setting-tg-user");
     const tgChan = document.getElementById("setting-tg-channel");
     const maxUser = document.getElementById("setting-max-user");
+    const maxChan = document.getElementById("setting-max-channel");
     const phoneInput = document.getElementById("setting-phone");
     const showPhoneCheckbox = document.getElementById("setting-show-phone");
 
     if (tgUser) tgUser.value = profile.telegramUsername || "";
     if (tgChan) tgChan.value = profile.telegramChannelUrl || "";
     if (maxUser) maxUser.value = profile.maxUsername || "";
+    if (maxChan) maxChan.value = profile.maxChannelUrl || "";
     if (phoneInput) phoneInput.value = profile.phone || "+7 (915) 318-18-19";
     if (showPhoneCheckbox) showPhoneCheckbox.checked = Boolean(profile.showPhone);
 
@@ -504,12 +616,14 @@ const AdminPanel = {
     const tgUser = document.getElementById("setting-tg-user");
     const tgChan = document.getElementById("setting-tg-channel");
     const maxUser = document.getElementById("setting-max-user");
+    const maxChan = document.getElementById("setting-max-channel");
     const phoneInput = document.getElementById("setting-phone");
     const showPhoneCheckbox = document.getElementById("setting-show-phone");
 
     const cleanTg = (tgUser ? tgUser.value.trim() : "").replace(/^@/, "");
     const tgChannel = tgChan ? tgChan.value.trim() : "";
     const maxLogin = (maxUser ? maxUser.value.trim() : "").replace(/^@/, "");
+    const maxChannel = maxChan ? maxChan.value.trim() : "";
     const phoneVal = phoneInput ? phoneInput.value.trim() : "+7 (915) 318-18-19";
     const cleanDigits = phoneVal.replace(/[^\d+]/g, "");
     const showPhone = showPhoneCheckbox ? showPhoneCheckbox.checked : false;
@@ -518,6 +632,7 @@ const AdminPanel = {
       telegramUsername: cleanTg,
       telegramChannelUrl: tgChannel,
       maxUsername: maxLogin,
+      maxChannelUrl: maxChannel,
       phone: phoneVal,
       phoneClean: cleanDigits.startsWith("+") ? cleanDigits : ("+" + cleanDigits),
       showPhone: showPhone
@@ -528,6 +643,9 @@ const AdminPanel = {
       renderProfile();
     }
     showToast("Контакты и настройки ссылок обновлены! 📱✨");
+    if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
+      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then(() => this.updateSyncCardStatus());
+    }
   },
 
   // ==========================================
@@ -578,12 +696,15 @@ const AdminPanel = {
 
     const prevBtn = document.getElementById("tour-btn-prev");
     const nextBtn = document.getElementById("tour-btn-next");
+    const nextBtnText = document.getElementById("tour-btn-next-text");
 
     if (prevBtn) {
-      prevBtn.style.display = step > 1 ? "inline-block" : "none";
+      prevBtn.style.display = step > 1 ? "inline-flex" : "none";
     }
 
-    if (nextBtn) {
+    if (nextBtnText) {
+      nextBtnText.textContent = step === this.totalTourSlides ? "Всё понятно, к витрине! ✨" : "Далее";
+    } else if (nextBtn) {
       nextBtn.textContent = step === this.totalTourSlides ? "Всё понятно, к витрине! ✨" : "Далее →";
     }
   },
@@ -658,6 +779,192 @@ const AdminPanel = {
   hideBubble() {
     const popover = document.getElementById("tooltip-popover");
     if (popover) popover.classList.remove("open");
+  },
+
+  // ==========================================
+  // Синхронизация с базой данных GitHub
+  // ==========================================
+  updateSyncCardStatus() {
+    const dot = document.getElementById("sync-status-indicator");
+    const title = document.getElementById("sync-status-title");
+    const desc = document.getElementById("sync-status-desc");
+    if (!dot || !title || !desc) return;
+
+    if (typeof SyncService === "undefined") {
+      dot.className = "sync-dot sync-dot-offline";
+      title.textContent = "База данных (Локальный режим)";
+      desc.textContent = "Модуль синхронизации недоступен";
+      return;
+    }
+
+    const cfg = SyncService.getConfig();
+    const hasWrite = SyncService.hasWriteAccess();
+
+    if (hasWrite) {
+      dot.className = "sync-dot sync-dot-online";
+      title.textContent = "База данных GitHub: Подключена";
+      const timeStr = cfg.lastSyncTime ? new Date(cfg.lastSyncTime).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "готово к записи";
+      desc.textContent = `Репозиторий ${cfg.githubOwner}/${cfg.githubRepo} • Синхр: ${timeStr}`;
+    } else {
+      dot.className = "sync-dot sync-dot-offline";
+      title.textContent = "База данных GitHub (Только чтение)";
+      desc.textContent = "Для автозаписи с телефона укажите GitHub Token в Настройках";
+    }
+  },
+
+  openDatabaseModal() {
+    const modal = document.getElementById("database-settings-modal");
+    if (!modal) return;
+    if (typeof SyncService !== "undefined") {
+      const cfg = SyncService.getConfig();
+      const repoInput = document.getElementById("sync-setting-repo");
+      const branchInput = document.getElementById("sync-setting-branch");
+      const tokenInput = document.getElementById("sync-setting-token");
+      if (repoInput) repoInput.value = `${cfg.githubOwner}/${cfg.githubRepo}`;
+      if (branchInput) branchInput.value = cfg.githubBranch || "main";
+      if (tokenInput) tokenInput.value = cfg.githubToken || "";
+    }
+    const testBox = document.getElementById("sync-test-result");
+    if (testBox) testBox.style.display = "none";
+    modal.classList.add("open");
+  },
+
+  closeDatabaseModal() {
+    const modal = document.getElementById("database-settings-modal");
+    if (modal) modal.classList.remove("open");
+  },
+
+  toggleTokenVisibility() {
+    const tokenInput = document.getElementById("sync-setting-token");
+    const label = document.getElementById("token-toggle-label");
+    if (!tokenInput) return;
+    if (tokenInput.type === "password") {
+      tokenInput.type = "text";
+      if (label) label.textContent = "Скрыть";
+    } else {
+      tokenInput.type = "password";
+      if (label) label.textContent = "Показать";
+    }
+  },
+
+  saveDatabaseSettings() {
+    const repoInput = document.getElementById("sync-setting-repo");
+    const branchInput = document.getElementById("sync-setting-branch");
+    const tokenInput = document.getElementById("sync-setting-token");
+
+    const fullRepo = repoInput ? repoInput.value.trim() : "stanlyu/mila-sladco";
+    const parts = fullRepo.split("/");
+    const owner = parts[0] || "stanlyu";
+    const repo = parts[1] || "mila-sladco";
+    const branch = branchInput ? branchInput.value.trim() : "main";
+    const token = tokenInput ? tokenInput.value.trim() : "";
+
+    if (typeof SyncService !== "undefined") {
+      SyncService.saveConfig({
+        githubOwner: owner,
+        githubRepo: repo,
+        githubBranch: branch,
+        githubToken: token
+      });
+    }
+
+    this.updateSyncCardStatus();
+    this.closeDatabaseModal();
+    showToast("Настройки базы данных GitHub сохранены! ☁️✨");
+  },
+
+  async testDatabaseConnection() {
+    const testBox = document.getElementById("sync-test-result");
+    if (!testBox) return;
+    testBox.style.display = "block";
+    testBox.style.background = "#E7F5FF";
+    testBox.style.color = "#1971C2";
+    testBox.textContent = "Проверка связи с GitHub API... ⏳";
+
+    const repoInput = document.getElementById("sync-setting-repo");
+    const branchInput = document.getElementById("sync-setting-branch");
+    const tokenInput = document.getElementById("sync-setting-token");
+
+    const fullRepo = repoInput ? repoInput.value.trim() : "stanlyu/mila-sladco";
+    const branch = branchInput ? branchInput.value.trim() : "main";
+    const token = tokenInput ? tokenInput.value.trim() : "";
+
+    const headers = { Accept: "application/vnd.github.v3+json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${fullRepo}/contents/data/catalog.json?ref=${branch}&t=${Date.now()}`, { headers });
+      if (res.ok) {
+        if (token) {
+          testBox.style.background = "#EBFBEE";
+          testBox.style.color = "#2B8A3E";
+          testBox.innerHTML = `✅ <b>Связь установлена!</b> Репозиторий найден, токен авторизован для записи в <code>data/catalog.json</code>.`;
+        } else {
+          testBox.style.background = "#FFF9DB";
+          testBox.style.color = "#F08C00";
+          testBox.innerHTML = `⚠️ <b>Чтение доступно</b>, но токен для записи не введен. Для сохранения изменений на GitHub добавьте Personal Access Token.`;
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        testBox.style.background = "#FFF5F5";
+        testBox.style.color = "#C92A2A";
+        testBox.innerHTML = `❌ <b>Ошибка GitHub API:</b> ${err.message || res.statusText} (статус ${res.status})`;
+      }
+    } catch (err) {
+      testBox.style.background = "#FFF5F5";
+      testBox.style.color = "#C92A2A";
+      testBox.innerHTML = `❌ <b>Ошибка сети:</b> ${err.message}`;
+    }
+  },
+
+  async pullFromRemoteDatabase() {
+    if (typeof SyncService === "undefined") return;
+    const dot = document.getElementById("sync-status-indicator");
+    if (dot) dot.className = "sync-dot sync-dot-syncing";
+    showToast("Загрузка актуального меню из базы данных... ⏳");
+
+    try {
+      const res = await SyncService.pullFromRemote();
+      if (res.success) {
+        this.renderAdminList();
+        this.updateChefAvatarPreview();
+        this.updateSyncCardStatus();
+        showToast(`✅ Загружено ${res.count} десертов из базы (${res.source === "github_api" ? "GitHub API" : "GitHub Pages"})!`);
+      } else {
+        showToast("⚠️ Не удалось загрузить из базы: " + (res.reason || res.error || "ошибка"));
+        this.updateSyncCardStatus();
+      }
+    } catch (err) {
+      showToast("❌ Ошибка при загрузке: " + err.message);
+      this.updateSyncCardStatus();
+    }
+  },
+
+  async pushToRemoteDatabase() {
+    if (typeof SyncService === "undefined") return;
+    if (!SyncService.hasWriteAccess()) {
+      showToast("⚠️ Для сохранения на GitHub укажите токен в Настройках базы");
+      this.openDatabaseModal();
+      return;
+    }
+
+    const dot = document.getElementById("sync-status-indicator");
+    if (dot) dot.className = "sync-dot sync-dot-syncing";
+    showToast("Отправка базы данных на GitHub... ☁️⏳");
+
+    try {
+      const res = await SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
+      if (res.success) {
+        this.updateSyncCardStatus();
+        showToast("✅ База на GitHub успешно обновлена! Все покупатели видят свежие десерты. ✨");
+      } else {
+        this.updateSyncCardStatus();
+        showToast("❌ Не удалось обновить GitHub: " + (res.message || "ошибка"));
+      }
+    } catch (err) {
+      this.updateSyncCardStatus();
+      showToast("❌ Ошибка сети при отправке: " + err.message);
+    }
   }
 };
 

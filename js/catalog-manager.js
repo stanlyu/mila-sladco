@@ -239,8 +239,9 @@ const DEFAULT_PROFILE = {
   phoneClean: "+79153181819",
   showPhone: false,
   telegramUsername: "",
-  telegramChannelUrl: "",
+  telegramChannelUrl: "https://t.me/mila_sladco1",
   maxUsername: "",
+  maxChannelUrl: "https://max.ru/join/rVKouI80PRp_A-6cqeyY62mq-_um0BP9w87l7Gnjhps",
   hasSeenTour: false
 };
 
@@ -310,6 +311,8 @@ const CatalogManager = {
 
   addProduct(data) {
     const id = data.id || `custom-${Date.now()}`;
+    const rawWeight = String(data.weight || "110").trim();
+    const formattedWeight = rawWeight.toLowerCase().endsWith("г") ? rawWeight : `${rawWeight} г`;
     const newProduct = {
       id,
       title: data.title || "Новый авторский десерт",
@@ -318,8 +321,8 @@ const CatalogManager = {
       badge: data.badge || "Новинка",
       badgeColor: data.badgeColor || "gold",
       price: Number(data.price) || 450,
-      weight: data.weight || "110 г",
-      image: data.image || "assets/images/mango-passion.jpg",
+      weight: formattedWeight,
+      image: data.image || "assets/images/placeholder-dessert.svg",
       isAvailable: data.isAvailable !== false,
       shortDesc: data.shortDesc || "Свежий авторский десерт ручной работы.",
       fullDesc: data.fullDesc || data.shortDesc || "Нежнейший десерт ручной работы от кондитера Люды.",
