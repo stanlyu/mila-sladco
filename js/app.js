@@ -435,10 +435,10 @@ document.addEventListener("DOMContentLoaded", () => {
       : {};
 
     const rawTg = (profile.telegramUsername || "").trim();
-    const cleanTg = rawTg.replace(/^https?:\/\/t\.me\//i, "").replace(/^t\.me\//i, "").replace(/^@/, "");
+    const cleanTg = rawTg.replace(/^https?:\/\/t\.me\//i, "").replace(/^t\.me\//i, "").replace(/^@/, "").trim();
 
     const rawMax = (profile.maxUsername || "").trim();
-    const cleanMax = rawMax.replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "");
+    const cleanMax = rawMax.replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "").replace(/[\s\-\(\)]/g, "");
 
     const targetUser = selectedMessenger === "telegram" ? cleanTg : cleanMax;
 
@@ -549,7 +549,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const maxBtn = document.getElementById("link-btn-max");
     if (maxBtn) {
       maxBtn.style.display = (profile.showMaxDirect !== false) ? "flex" : "none";
-      const cleanMax = (profile.maxUsername || "").trim().replace(/^@/, "");
+      const cleanMax = (profile.maxUsername || "").trim().replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "").replace(/[\s\-\(\)]/g, "");
       if (cleanMax && cleanMax !== "none") {
         maxBtn.href = `https://max.ru/${cleanMax}`;
         maxBtn.onclick = null;
@@ -566,7 +566,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tgDirectBtn = document.getElementById("link-btn-telegram-direct");
     if (tgDirectBtn) {
       tgDirectBtn.style.display = (profile.showTelegramDirect !== false) ? "flex" : "none";
-      const cleanTg = (profile.telegramUsername || "").trim().replace(/^@/, "");
+      const cleanTg = (profile.telegramUsername || "").trim().replace(/^https?:\/\/t\.me\//i, "").replace(/^t\.me\//i, "").replace(/^@/, "").trim();
       if (cleanTg && cleanTg !== "none") {
         tgDirectBtn.href = `https://t.me/${cleanTg}`;
         tgDirectBtn.onclick = null;
