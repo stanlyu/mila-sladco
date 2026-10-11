@@ -133,10 +133,16 @@ const AdminPanel = {
   isSyncing: false,
   lastPublishedTime: null,
 
+  markUnpublishedChanges() {
+    this.hasUnpublishedChanges = true;
+    this.setSyncState("pending");
+  },
+
   setSyncState(state, message) {
     const dot = document.getElementById("sync-status-dot");
     const text = document.getElementById("sync-status-text");
     const btn = document.getElementById("btn-admin-publish");
+    const bar = document.getElementById("admin-sync-bar");
 
     if (dot) {
       dot.className = "sync-dot";
@@ -144,27 +150,39 @@ const AdminPanel = {
       if (state === "pending") dot.classList.add("pending");
     }
 
+    if (bar) {
+      if (state === "pending") {
+        bar.classList.add("has-pending");
+      } else {
+        bar.classList.remove("has-pending");
+      }
+    }
+
     if (text) {
       if (message) {
         text.textContent = message;
       } else if (state === "syncing") {
-        text.textContent = "⏳ Сохранение на GitHub...";
+        text.textContent = "⏳ Публикация на GitHub...";
       } else if (state === "pending") {
-        text.textContent = "⚠️ Есть несохранённые правки";
+        text.textContent = "⚠️ Есть несохранённые изменения";
       } else {
-        const timeStr = this.lastPublishedTime || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        text.textContent = `🟢 Все изменения сохранены на GitHub (${timeStr})`;
+        const timeStr = this.lastPublishedTime ? ` (${this.lastPublishedTime})` : "";
+        text.textContent = `🟢 Все изменения опубликованы на GitHub${timeStr}`;
       }
     }
 
     if (btn) {
       btn.disabled = (state === "syncing");
       btn.textContent = (state === "syncing") ? "⏳ Публикуем..." : "🚀 Опубликовать";
+      if (state === "pending") {
+        btn.classList.add("pending-highlight");
+      } else {
+        btn.classList.remove("pending-highlight");
+      }
     }
   },
 
   async syncToCloud() {
-    this.hasUnpublishedChanges = true;
     this.isSyncing = true;
     this.setSyncState("syncing");
 
@@ -193,10 +211,11 @@ const AdminPanel = {
   },
 
   async manualPublish() {
-    showToast("Отправляем изменения в базу данных GitHub... 🚀");
+    if (this.isSyncing) return;
+    showToast("Публикуем изменения на GitHub... 🚀");
     const ok = await this.syncToCloud();
     if (ok) {
-      showToast("🎉 Все изменения успешно опубликованы на GitHub! Клиенты сразу видят свежую витрину.", 4500);
+      showToast("🎉 Все изменения успешно опубликованы на GitHub! Клиенты видят обновленный сайт.", 4500);
     } else {
       showToast("Не удалось опубликовать. Проверьте интернет-соединение.", 4000);
     }
@@ -205,7 +224,8 @@ const AdminPanel = {
   // Выход из сессии кондитера
   logout() {
     if (this.hasUnpublishedChanges || this.isSyncing) {
-      if (!confirm("У вас есть изменения, которые ещё отправляются на GitHub. Вы уверены, что хотите выйти сейчас без ожидания публикации?")) {
+      const exitWithoutSaving = confirm("У вас есть несохраненные изменения. Хотите выйти без сохранения?");
+      if (!exitWithoutSaving) {
         return;
       }
     }
@@ -231,7 +251,8 @@ const AdminPanel = {
 
   close(force = false) {
     if (!force && (this.hasUnpublishedChanges || this.isSyncing)) {
-      if (!confirm("У вас есть изменения, которые ещё отправляются на GitHub. Закрыть окно без ожидания публикации?")) {
+      const exitWithoutSaving = confirm("У вас есть несохраненные изменения. Хотите выйти без сохранения?");
+      if (!exitWithoutSaving) {
         return;
       }
     }
@@ -258,7 +279,7 @@ const AdminPanel = {
           CatalogManager.updateProfile({ avatar: compressed });
           this.updateChefAvatarPreview();
           showToast("Фото шеф-кондитера обновлено! 📸✨");
-          this.syncToCloud();
+          this.markUnpublishedChanges();
           return;
         }
       } catch (e) {
@@ -270,7 +291,7 @@ const AdminPanel = {
         CatalogManager.updateProfile({ avatar: base64Url });
         this.updateChefAvatarPreview();
         showToast("Фото шеф-кондитера успешно обновлено! 📸✨");
-        this.syncToCloud();
+        this.markUnpublishedChanges();
       };
       reader.readAsDataURL(file);
     }
@@ -327,14 +348,14 @@ const AdminPanel = {
     }
     CatalogManager.updateProduct(id, { price: priceNum });
     showToast("Цена успешно обновлена! ✨");
-    this.syncToCloud();
+    this.markUnpublishedChanges();
   },
 
   toggleStatus(id) {
     const newStatus = CatalogManager.toggleAvailability(id);
     this.renderAdminList();
     showToast(newStatus ? "Десерт снова на витрине!" : "Десерт скрыт с витрины (закончился)");
-    this.syncToCloud();
+    this.markUnpublishedChanges();
   },
 
   deleteProduct(id) {
@@ -344,7 +365,7 @@ const AdminPanel = {
       CatalogManager.deleteProduct(id);
       this.renderAdminList();
       showToast("Десерт удален");
-      this.syncToCloud();
+      this.markUnpublishedChanges();
     }
   },
 
@@ -473,7 +494,7 @@ const AdminPanel = {
 
     this.closeEditModal();
     this.renderAdminList();
-    this.syncToCloud();
+    this.markUnpublishedChanges();
   },
 
   // Смена PIN-кода Людой через модальное окно
@@ -541,7 +562,7 @@ const AdminPanel = {
     if (res.success) {
       this.closeChangePinModal();
       showToast("PIN-код успешно изменен на новый! 🔐✨", 4000);
-      this.syncToCloud();
+      this.markUnpublishedChanges();
     } else {
       showToast(res.message, 4000);
     }
@@ -570,7 +591,7 @@ const AdminPanel = {
       if (typeof renderProfile === "function") {
         renderProfile();
       }
-      this.syncToCloud();
+      this.markUnpublishedChanges();
       showToast("Все настройки сброшены до стандартных (PIN 1819) ✨", 4000);
     }
   },
@@ -733,7 +754,7 @@ const AdminPanel = {
       renderProfile();
     }
     showToast("Контакты и настройки ссылок обновлены! 📱✨");
-    this.syncToCloud();
+    this.markUnpublishedChanges();
   },
 
   // ==========================================
@@ -871,3 +892,7 @@ const AdminPanel = {
 };
 
 window.AdminPanel = AdminPanel;
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { AdminPanel };
+}
