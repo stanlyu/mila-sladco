@@ -316,8 +316,9 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="order-phone">Телефон или ник для связи *</label>
-                <input type="text" id="order-phone" class="form-input" placeholder="+7 (999) 000-00-00 или @username" required />
+                <label class="form-label" for="order-phone">Телефон для связи *</label>
+                <input type="tel" id="order-phone" class="form-input" placeholder="+7 (___) ___-__-__" autocomplete="tel" required />
+                <div id="order-phone-error" class="input-error-msg" style="display: none;"></div>
               </div>
 
               <!-- Выбор канала связи -->
@@ -407,6 +408,9 @@
             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
               <button type="button" id="btn-proceed-messenger" class="btn-send-order max-style" onclick="proceedToMessenger()">
                 💬 Перейти в диалог MAX и вставить чек
+              </button>
+              <button type="button" id="btn-proceed-max-share" class="btn-admin-secondary" style="display: none; padding: 10px; font-size: 12px; font-weight: 600; border: 1px solid #1E88E5; color: #1E88E5; background: #F0F7FF;" onclick="proceedToMaxShare()">
+                🚀 Или открыть в MAX с автозаполнением текста (:share)
               </button>
               <div style="display: flex; gap: 8px;">
                 <button type="button" class="btn-admin-secondary" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 600;" onclick="copyOrderTextAgain()">
@@ -952,11 +956,11 @@
         <div id="phone-protect-challenge">
           <div style="font-size: 38px; margin-bottom: 8px;">🛡️</div>
           <h3 class="admin-sheet-title" style="margin-bottom: 6px;">Защита от спам-звонков</h3>
-          <p style="font-size: 13px; color: var(--color-muted); line-height: 1.4; margin-bottom: 16px;">
-            Чтобы открыть номер кондитера, подтвердите, что вы человек. Выберите <b>сладкий десерт</b> среди картинок:
+          <p id="phone-protect-prompt" style="font-size: 13px; color: var(--color-muted); line-height: 1.4; margin-bottom: 16px;">
+            Чтобы открыть номер кондитера, подтвердите, что вы человек. Выберите <b id="phone-protect-target-label">десерт</b> среди картинок:
           </p>
 
-          <div id="phone-protect-error" class="pin-error-box" style="display: none; margin-bottom: 12px;"></div>
+          <div id="phone-protect-error" class="pin-error-box" style="display: none; margin-bottom: 12px;">Неверный ответ. Попробуйте ещё раз.</div>
 
           <div class="captcha-grid" id="phone-protect-captcha-grid">
             <button type="button" class="captcha-btn" onclick="PhoneProtection.chooseOption(false)">

@@ -376,6 +376,90 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   window.copyTextToClipboard = copyTextToClipboard;
 
+  // Умное автоформатирование телефонного номера
+  function formatPhoneNumber(val) {
+    if (!val) return "";
+    let digits = val.replace(/\D/g, "");
+    if (!digits) return "";
+
+    // Если первая цифра 9 — пользователь начал вводить сотовый РФ (например 906...)
+    if (digits[0] === "9") {
+      digits = "7" + digits;
+    }
+    // Если первая цифра 8 — заменяем на 7
+    if (digits[0] === "8") {
+      digits = "7" + digits.slice(1);
+    }
+
+    // Российский / Казахстанский формат (+7)
+    if (digits[0] === "7") {
+      const d = digits.slice(1, 11); // максимум 10 цифр после 7
+      let formatted = "+7";
+      if (d.length > 0) {
+        formatted += " (" + d.slice(0, 3);
+      }
+      if (d.length > 3) {
+        formatted += ") " + d.slice(3, 6);
+      }
+      if (d.length > 6) {
+        formatted += "-" + d.slice(6, 8);
+      }
+      if (d.length > 8) {
+        formatted += "-" + d.slice(8, 10);
+      }
+      return formatted;
+    }
+
+    // Международный формат для других стран (+...)
+    return "+" + digits.slice(0, 15);
+  }
+  window.formatPhoneNumber = formatPhoneNumber;
+
+  function validatePhoneNumber(val) {
+    if (!val) return false;
+    const digits = val.replace(/\D/g, "");
+    if (val.startsWith("+7") || digits.startsWith("7") || digits.startsWith("8")) {
+      return digits.length === 11;
+    }
+    return digits.length >= 10 && digits.length <= 15;
+  }
+  window.validatePhoneNumber = validatePhoneNumber;
+
+  function initPhoneInputMask() {
+    const input = document.getElementById("order-phone");
+    const errBox = document.getElementById("order-phone-error");
+    if (!input) return;
+
+    input.addEventListener("input", () => {
+      const formatted = formatPhoneNumber(input.value);
+      input.value = formatted;
+      if (errBox) {
+        errBox.style.display = "none";
+        errBox.textContent = "";
+      }
+      input.classList.remove("input-error");
+    });
+
+    input.addEventListener("blur", () => {
+      const val = input.value.trim();
+      if (!val) return;
+      if (!validatePhoneNumber(val)) {
+        if (errBox) {
+          errBox.textContent = "Пожалуйста, укажите корректный номер телефона (11 цифр)";
+          errBox.style.display = "block";
+        }
+        input.classList.add("input-error");
+      } else {
+        if (errBox) {
+          errBox.style.display = "none";
+          errBox.textContent = "";
+        }
+        input.classList.remove("input-error");
+      }
+    });
+  }
+  window.initPhoneInputMask = initPhoneInputMask;
+
   // Отправка заказа
   window.submitOrder = () => {
     try {
@@ -417,9 +501,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (!phone) {
-        showToast("Пожалуйста, укажите контактный телефон или ник", 3500);
-        if (phoneInput) phoneInput.focus();
+      const isPhoneValid = validatePhoneNumber(phone);
+      if (!phone || !isPhoneValid) {
+        showToast("Пожалуйста, укажите корректный номер телефона (11 цифр)", 4000);
+        if (phoneInput) {
+          phoneInput.classList.add("input-error");
+          phoneInput.focus();
+        }
+        const errBox = document.getElementById("order-phone-error");
+        if (errBox) {
+          errBox.textContent = "Пожалуйста, укажите корректный номер телефона (11 цифр)";
+          errBox.style.display = "block";
+        }
         return;
       }
 
@@ -475,6 +568,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
 
+      window.proceedToMaxShare = () => {
+        if (currentOrderText) {
+          copyTextToClipboard(currentOrderText);
+        }
+        const shareUrl = `https://max.ru/:share?text=${encodeURIComponent(currentOrderText)}`;
+        try {
+          window.open(shareUrl, "_blank");
+        } catch (e) {
+          window.location.href = shareUrl;
+        }
+      };
+
       window.retryOpenMessenger = window.proceedToMessenger;
 
       window.backToOrderEdit = () => {
@@ -525,14 +630,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       currentMessengerUrl = messengerUrl;
 
-      // Надежно синхронно копируем чек в буфер обмена перед открытием окна
+      // Надежно синхронно копируем чек в буфер обмена перед переходом
       copyTextToClipboard(orderText);
 
-      try {
-        window.open(messengerUrl, "_blank");
-      } catch (e) {
-        console.warn("Не удалось автоматически открыть окно", e);
+      // Для Telegram сразу открываем чат с кондитером (Telegram умеет автоматически подставлять ?text=)
+      if (selectedMessenger === "telegram") {
+        try {
+          window.open(messengerUrl, "_blank");
+        } catch (e) {
+          console.warn("Не удалось автоматически открыть окно Telegram", e);
+        }
       }
+      // Для MAX автоматический переход НЕ выполняем, чтобы покупатель увидел экран подтверждения и инструкции, и сам нажал кнопку перехода!
 
       // Переключаем на экран подтверждения (корзина сохраняется, пока гость не нажмет «Заказ отправлен»)
       const mainFlow = document.getElementById("cart-main-flow");
@@ -540,6 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const msgTitle = document.getElementById("order-success-title");
       const msgHint = document.getElementById("order-success-msg");
       const proceedBtn = document.getElementById("btn-proceed-messenger");
+      const shareBtn = document.getElementById("btn-proceed-max-share");
       const helpBox = document.getElementById("order-success-help");
       const iconEl = document.getElementById("order-success-icon");
 
@@ -555,6 +665,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (proceedBtn) {
           proceedBtn.innerHTML = `✈️ Открыть диалог в Telegram`;
         }
+        if (shareBtn) {
+          shareBtn.style.display = "none";
+        }
         if (helpBox) {
           helpBox.innerHTML = `<b>💡 Если чат не открылся:</b><br />Нажмите кнопку «Открыть диалог в Telegram» выше или скопируйте чек кнопкой ниже.`;
         }
@@ -563,18 +676,22 @@ document.addEventListener("DOMContentLoaded", () => {
         if (iconEl) iconEl.textContent = "📋";
         if (msgTitle) msgTitle.textContent = "Чек скопирован в буфер обмена!";
         if (msgHint) {
-          msgHint.innerHTML = `Мы сформировали ваш заказ и скопировали чек в буфер обмена устройства.`;
+          msgHint.innerHTML = `Мы сформировали ваш заказ и скопировали чек в буфер обмена вашего устройства.`;
         }
         if (proceedBtn) {
           proceedBtn.innerHTML = `💬 Перейти в диалог MAX и вставить чек`;
+        }
+        if (shareBtn) {
+          shareBtn.style.display = "block";
         }
         if (helpBox) {
           helpBox.innerHTML = `<b>💡 Как отправить чек в MAX:</b><br />
 1. Нажмите кнопку выше <b>«Перейти в диалог MAX»</b>.<br />
 2. В открывшемся чате нажмите и удерживайте строку ввода сообщения.<br />
-3. Выберите <b>«Вставить»</b> и нажмите стрелочку <b>«Отправить»</b>.`;
+3. Выберите <b>«Вставить»</b> и нажмите стрелочку <b>«Отправить»</b>.<br /><br />
+<i>Либо воспользуйтесь кнопкой «Открыть в MAX с автозаполнением текста» выше.</i>`;
         }
-        showToast("Чек скопирован в буфер! Вставьте в MAX 📋", 4000);
+        showToast("Чек скопирован в буфер! Нажмите кнопку для перехода в MAX 📋", 4000);
       }
     } catch (err) {
       console.error("Ошибка при оформлении заказа:", err);
@@ -771,35 +888,178 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Защита номера телефона шефа от автоматических спам-ботов
   const PhoneProtection = {
-    // Пул вариантов для капчи (без десертов)
-    captchaPool: [
-      { icon: "🚗", label: "Машина", correct: false },
-      { icon: "🐶", label: "Щенок", correct: false },
-      { icon: "⚽", label: "Мяч", correct: false },
-      { icon: "✈️", label: "Самолёт", correct: false },
-      { icon: "🚲", label: "Велосипед", correct: false },
-      { icon: "🐱", label: "Котёнок", correct: false },
-      { icon: "🎸", label: "Гитара", correct: false },
-      { icon: "🚀", label: "Ракета", correct: false }
-    ],
-
-    // Десерты (правильные ответы)
-    dessertPool: [
-      { icon: "🍰", label: "Десерт", correct: true },
-      { icon: "🧁", label: "Капкейк", correct: true },
-      { icon: "🎂", label: "Торт", correct: true },
-      { icon: "🍩", label: "Пончик", correct: true }
+    // Внушительная библиотека категорий для защиты от ботов и перебора
+    categories: [
+      {
+        id: "dessert",
+        prompt: "сладкий десерт",
+        items: [
+          { icon: "🍰", label: "Пирожное" },
+          { icon: "🧁", label: "Капкейк" },
+          { icon: "🎂", label: "Торт" },
+          { icon: "🍩", label: "Пончик" },
+          { icon: "🍪", label: "Печенье" },
+          { icon: "🍮", label: "Пудинг" },
+          { icon: "🧇", label: "Вафли" },
+          { icon: "🍫", label: "Шоколад" }
+        ]
+      },
+      {
+        id: "hot_drink",
+        prompt: "горячий напиток",
+        items: [
+          { icon: "☕", label: "Кофе" },
+          { icon: "🍵", label: "Чай" },
+          { icon: "🫖", label: "Чайник" },
+          { icon: "🥛", label: "Молоко" }
+        ]
+      },
+      {
+        id: "fruit",
+        prompt: "сочный фрукт или ягоду",
+        items: [
+          { icon: "🍓", label: "Клубника" },
+          { icon: "🍎", label: "Яблоко" },
+          { icon: "🍒", label: "Вишня" },
+          { icon: "🍌", label: "Банан" },
+          { icon: "🍇", label: "Виноград" },
+          { icon: "🍊", label: "Апельсин" },
+          { icon: "🍑", label: "Персик" },
+          { icon: "🍉", label: "Арбуз" }
+        ]
+      },
+      {
+        id: "pet",
+        prompt: "домашнего питомца",
+        items: [
+          { icon: "🐱", label: "Котёнок" },
+          { icon: "🐶", label: "Щенок" },
+          { icon: "🐰", label: "Кролик" },
+          { icon: "🐹", label: "Хомячок" },
+          { icon: "🦜", label: "Попугай" }
+        ]
+      },
+      {
+        id: "flower",
+        prompt: "цветок для букета",
+        items: [
+          { icon: "🌸", label: "Сакура" },
+          { icon: "🌹", label: "Роза" },
+          { icon: "🌻", label: "Подсолнух" },
+          { icon: "🌷", label: "Тюльпан" },
+          { icon: "💐", label: "Букет" },
+          { icon: "🌼", label: "Ромашка" }
+        ]
+      },
+      {
+        id: "transport",
+        prompt: "транспорт",
+        items: [
+          { icon: "🚗", label: "Автомобиль" },
+          { icon: "✈️", label: "Самолёт" },
+          { icon: "🚲", label: "Велосипед" },
+          { icon: "🚂", label: "Поезд" },
+          { icon: "🚀", label: "Ракета" },
+          { icon: "⛵", label: "Парусник" }
+        ]
+      },
+      {
+        id: "music",
+        prompt: "музыкальный инструмент",
+        items: [
+          { icon: "🎸", label: "Гитара" },
+          { icon: "🎹", label: "Пианино" },
+          { icon: "🎻", label: "Скрипка" },
+          { icon: "🎺", label: "Труба" },
+          { icon: "🥁", label: "Барабан" }
+        ]
+      },
+      {
+        id: "sport",
+        prompt: "спортивный инвентарь",
+        items: [
+          { icon: "⚽", label: "Мяч" },
+          { icon: "🏀", label: "Баскетбол" },
+          { icon: "🎾", label: "Теннис" },
+          { icon: "🥊", label: "Перчатки" },
+          { icon: "🎿", label: "Лыжи" }
+        ]
+      },
+      {
+        id: "veggie",
+        prompt: "свежий овощ",
+        items: [
+          { icon: "🥕", label: "Морковь" },
+          { icon: "🥦", label: "Брокколи" },
+          { icon: "🥑", label: "Авокадо" },
+          { icon: "🌽", label: "Кукуруза" },
+          { icon: "🍅", label: "Томат" }
+        ]
+      },
+      {
+        id: "celebration",
+        prompt: "праздничный атрибут",
+        items: [
+          { icon: "🎁", label: "Подарок" },
+          { icon: "🎉", label: "Хлопушка" },
+          { icon: "🎈", label: "Шарик" },
+          { icon: "🕯️", label: "Свеча" }
+        ]
+      },
+      {
+        id: "sea",
+        prompt: "морского жителя",
+        items: [
+          { icon: "🐬", label: "Дельфин" },
+          { icon: "🐙", label: "Осьминог" },
+          { icon: "🦀", label: "Краб" },
+          { icon: "🐠", label: "Рыбка" },
+          { icon: "🐳", label: "Кит" }
+        ]
+      },
+      {
+        id: "nature",
+        prompt: "природное явление",
+        items: [
+          { icon: "☀️", label: "Солнце" },
+          { icon: "🌙", label: "Луна" },
+          { icon: "⭐", label: "Звезда" },
+          { icon: "🌈", label: "Радуга" },
+          { icon: "❄️", label: "Снежинка" }
+        ]
+      }
     ],
 
     renderCaptcha() {
       const grid = document.getElementById("phone-protect-captcha-grid") || document.querySelector(".captcha-grid");
+      const targetLabel = document.getElementById("phone-protect-target-label");
       if (!grid) return;
 
-      const randomDessert = this.dessertPool[Math.floor(Math.random() * this.dessertPool.length)];
-      const shuffledDecoys = [...this.captchaPool].sort(() => Math.random() - 0.5).slice(0, 3);
-      const items = [randomDessert, ...shuffledDecoys].sort(() => Math.random() - 0.5);
+      // Выбираем случайную целевую категорию
+      const targetCategoryIndex = Math.floor(Math.random() * this.categories.length);
+      const targetCategory = this.categories[targetCategoryIndex];
 
-      grid.innerHTML = items.map(item => `
+      if (targetLabel) {
+        targetLabel.textContent = targetCategory.prompt;
+      }
+
+      // Выбираем 1 правильный элемент из целевой категории
+      const correctItem = targetCategory.items[Math.floor(Math.random() * targetCategory.items.length)];
+
+      // Выбираем 3 ловушки из других категорий
+      const otherCategories = this.categories.filter((_, idx) => idx !== targetCategoryIndex);
+      const shuffledOtherCats = [...otherCategories].sort(() => Math.random() - 0.5);
+      const decoys = shuffledOtherCats.slice(0, 3).map(cat => {
+        return cat.items[Math.floor(Math.random() * cat.items.length)];
+      });
+
+      // Перемешиваем варианты
+      const options = [
+        { ...correctItem, correct: true },
+        ...decoys.map(d => ({ ...d, correct: false }))
+      ].sort(() => Math.random() - 0.5);
+
+      grid.innerHTML = options.map(item => `
         <button type="button" class="captcha-btn" onclick="PhoneProtection.chooseOption(${item.correct})">
           <span class="captcha-icon">${item.icon}</span>
           <span class="captcha-label">${item.label}</span>
@@ -849,9 +1109,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const errBox = document.getElementById("phone-protect-error");
       if (!isCorrect) {
         if (errBox) {
-          errBox.textContent = "Не совсем то! Выберите десерт (пирожное 🍰, капкейк 🧁 или торт 🎂), чтобы подтвердить, что вы человек.";
+          errBox.textContent = "Неверный ответ. Попробуйте ещё раз.";
           errBox.style.display = "block";
         }
+        // Мгновенная перегенерация вопроса и вариантов для защиты от перебора ботами
+        this.renderCaptcha();
         return;
       }
 
@@ -880,6 +1142,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.renderProfile = renderProfile;
   document.addEventListener("profile:updated", renderProfile);
   initModalScrollLock();
+  initPhoneInputMask();
 
   // Первоначальный рендер
   renderProfile();

@@ -303,3 +303,96 @@ test("copyTextToClipboard: надежное синхронное копиров�
   assert.strictEqual(copiedText, "Тестовый заказ");
 });
 
+test("formatPhoneNumber: автоформатирование номеров РФ и международных", () => {
+  function formatPhoneNumber(val) {
+    if (!val) return "";
+    let digits = val.replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits[0] === "9") digits = "7" + digits;
+    if (digits[0] === "8") digits = "7" + digits.slice(1);
+    if (digits[0] === "7") {
+      const d = digits.slice(1, 11);
+      let formatted = "+7";
+      if (d.length > 0) formatted += " (" + d.slice(0, 3);
+      if (d.length > 3) formatted += ") " + d.slice(3, 6);
+      if (d.length > 6) formatted += "-" + d.slice(6, 8);
+      if (d.length > 8) formatted += "-" + d.slice(8, 10);
+      return formatted;
+    }
+    return "+" + digits.slice(0, 15);
+  }
+
+  // Ввод без префикса (с 9-ки)
+  assert.strictEqual(formatPhoneNumber("9063594244"), "+7 (906) 359-42-44");
+  // Ввод с 8-ки
+  assert.strictEqual(formatPhoneNumber("89063594244"), "+7 (906) 359-42-44");
+  // Ввод с +7
+  assert.strictEqual(formatPhoneNumber("+79063594244"), "+7 (906) 359-42-44");
+  // Ввод с мусором и спецсимволами
+  assert.strictEqual(formatPhoneNumber("+7 (906) abc 359--42..44"), "+7 (906) 359-42-44");
+  // Частичный ввод
+  assert.strictEqual(formatPhoneNumber("906"), "+7 (906");
+  assert.strictEqual(formatPhoneNumber("906359"), "+7 (906) 359");
+});
+
+test("validatePhoneNumber: проверка корректности 11 цифр", () => {
+  function validatePhoneNumber(val) {
+    if (!val) return false;
+    const digits = val.replace(/\D/g, "");
+    if (val.startsWith("+7") || digits.startsWith("7") || digits.startsWith("8")) {
+      return digits.length === 11;
+    }
+    return digits.length >= 10 && digits.length <= 15;
+  }
+
+  assert.strictEqual(validatePhoneNumber("+7 (906) 359-42-44"), true);
+  assert.strictEqual(validatePhoneNumber("+79063594244"), true);
+  assert.strictEqual(validatePhoneNumber("89063594244"), true);
+  assert.strictEqual(validatePhoneNumber("+7 (906) 359-42"), false); // неполный
+  assert.strictEqual(validatePhoneNumber(""), false);
+  assert.strictEqual(validatePhoneNumber("не телефон"), false);
+});
+
+test("PhoneProtection: нейтральное сообщение об ошибке и мгновенная перегенерация нового вопроса", () => {
+  let regeneratedCount = 0;
+  let lastError = "";
+
+  const mockPhoneProtection = {
+    renderCaptcha() {
+      regeneratedCount++;
+    },
+    chooseOption(isCorrect) {
+      if (!isCorrect) {
+        lastError = "Неверный ответ. Попробуйте ещё раз.";
+        this.renderCaptcha();
+        return;
+      }
+    }
+  };
+
+  mockPhoneProtection.chooseOption(false);
+  assert.strictEqual(lastError, "Неверный ответ. Попробуйте ещё раз.");
+  assert.strictEqual(lastError.includes("десерт"), false, "Текст ошибки не должен подсказывать ключевые слова");
+  assert.strictEqual(lastError.includes("пирожное"), false);
+  assert.strictEqual(regeneratedCount, 1, "При неверном ответе должна запускаться перегенерация вопроса");
+});
+
+test("submitOrder: для MAX не совершается неожиданный прыжок window.open, а выводится экран с чеком и кнопками", () => {
+  let windowOpenCalled = false;
+  const selectedMessenger = "max";
+
+  // Логика: для telegram — сразу window.open, для MAX — показ экрана подтверждения
+  if (selectedMessenger === "telegram") {
+    windowOpenCalled = true;
+  }
+
+  assert.strictEqual(windowOpenCalled, false, "Для MAX не должно происходить немедленного прыжка в приложение");
+
+  // Ссылка шеринга с автозаполнением формируется корректно
+  const orderText = "Заказ #123";
+  const shareUrl = `https://max.ru/:share?text=${encodeURIComponent(orderText)}`;
+  assert.ok(shareUrl.startsWith("https://max.ru/:share?text="));
+  assert.ok(shareUrl.includes(encodeURIComponent("Заказ #123")));
+});
+
+

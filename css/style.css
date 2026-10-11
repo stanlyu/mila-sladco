@@ -1729,6 +1729,19 @@ input[type="date"].form-input {
   margin-bottom: 16px;
   display: none;
 }
+.input-error {
+  border-color: #E03131 !important;
+  background-color: #FFFDFD !important;
+  box-shadow: 0 0 0 3px rgba(224, 49, 49, 0.12) !important;
+}
+
+.input-error-msg {
+  color: #E03131;
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-top: 5px;
+  line-height: 1.3;
+}
 
 .btn-admin-logout {
   background: #FFF5F5;
