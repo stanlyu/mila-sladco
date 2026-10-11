@@ -4,9 +4,9 @@
   "owner": "Кондитер Люда",
   "avatar": "assets/images/chef-mila.jpg",
   "statusText": "Принимаем заказы на сегодня и предзаказы",
-  "phone": "+7 (915) 318-18-19",
-  "phoneClean": "+79153181819",
-  "showPhone": false,
+  "phone": "+79063594244",
+  "phoneClean": "+79063594244",
+  "showPhone": true,
   "telegramUsername": "",
   "telegramChannelUrl": "https://t.me/mila_sladco1",
   "maxUsername": "",
@@ -15,7 +15,7 @@
   "showMaxDirect": true,
   "showTelegramChannel": true,
   "showMaxChannel": false,
-  "hasSeenTour": false,
+  "hasSeenTour": true,
   "pinHash": "2052782898",
   "pickupAddress": "Москва, м. Раменки"
 }
