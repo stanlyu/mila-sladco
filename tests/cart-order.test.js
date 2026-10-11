@@ -163,3 +163,36 @@ test("Cart: сброс устаревшей корзины при открыти
   assert.strictEqual(Cart.items.length, 0);
 });
 
+test("submitOrder: успешное оформление заказа без падений на profile и чистый URL для MAX", () => {
+  CatalogManager.init();
+  CatalogManager.updateProfile({
+    pickupAddress: "Москва, м. Раменки, Мичуринский проспект, 20",
+    maxUsername: "https://max.ru/u/f9LHodD0cOKtpgcRQDbst0ZH8oscTneW8jil_ynJPKyuKz80ix3NCrQsRss"
+  });
+  Cart.init(CatalogManager);
+  Cart.clear();
+  Cart.addItem("mango-passion", 1);
+
+  const profile = CatalogManager.getProfile();
+  assert.ok(profile);
+  assert.strictEqual(profile.pickupAddress, "Москва, м. Раменки, Мичуринский проспект, 20");
+
+  const formData = {
+    name: "Иван",
+    phone: "+7 900 123-45-67",
+    deliveryType: "pickup",
+    pickupAddress: profile.pickupAddress,
+    messenger: "max"
+  };
+
+  const text = Cart.generateOrderText(formData);
+  assert.ok(text.includes("Иван"));
+  assert.ok(text.includes("Самовывоз (Москва, м. Раменки, Мичуринский проспект, 20)"));
+
+  let rawMax = profile.maxUsername.trim();
+  const maxUrlMatch = rawMax.match(/https?:\/\/[^\s]+/i);
+  if (maxUrlMatch) rawMax = maxUrlMatch[0];
+  assert.strictEqual(rawMax, "https://max.ru/u/f9LHodD0cOKtpgcRQDbst0ZH8oscTneW8jil_ynJPKyuKz80ix3NCrQsRss");
+  assert.strictEqual(rawMax.includes("?message="), false);
+});
+

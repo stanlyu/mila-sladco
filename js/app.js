@@ -348,155 +348,173 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Отправка заказа
   window.submitOrder = () => {
-    if (Cart.items.length === 0) {
-      showToast("Корзина пуста");
-      return;
-    }
+    try {
+      if (Cart.items.length === 0) {
+        showToast("Корзина пуста");
+        return;
+      }
 
-    const name = document.getElementById("order-name").value.trim();
-    const phone = document.getElementById("order-phone").value.trim();
-    const date = document.getElementById("order-date").value;
-    const timeSelect = document.getElementById("order-time").value;
-    const customTimeInput = document.getElementById("order-custom-time");
-    const deliveryType = document.getElementById("order-delivery").value;
-    const address = document.getElementById("order-address").value.trim();
-    const comment = document.getElementById("order-comment").value.trim();
+      const profile = (typeof CatalogManager !== "undefined" && CatalogManager.getProfile) 
+        ? (CatalogManager.getProfile() || {})
+        : {};
 
-    let time = timeSelect;
-    if (timeSelect === "custom") {
-      const customVal = customTimeInput ? customTimeInput.value.trim() : "";
-      time = customVal ? `К точному времени: ${customVal}` : "К точному времени (по согласованию)";
-    }
+      const nameInput = document.getElementById("order-name");
+      const phoneInput = document.getElementById("order-phone");
+      const dateInput = document.getElementById("order-date");
+      const timeSelect = document.getElementById("order-time");
+      const customTimeInput = document.getElementById("order-custom-time");
+      const deliverySelect = document.getElementById("order-delivery");
+      const addressInput = document.getElementById("order-address");
+      const commentInput = document.getElementById("order-comment");
 
-    if (!name) {
-      showToast("Пожалуйста, укажите ваше имя", 3500);
-      document.getElementById("order-name").focus();
-      return;
-    }
+      const name = nameInput ? nameInput.value.trim() : "";
+      const phone = phoneInput ? phoneInput.value.trim() : "";
+      const date = dateInput ? dateInput.value : "";
+      const timeVal = timeSelect ? timeSelect.value : "";
+      const deliveryType = deliverySelect ? deliverySelect.value : "delivery";
+      const address = addressInput ? addressInput.value.trim() : "";
+      const comment = commentInput ? commentInput.value.trim() : "";
 
-    if (!phone) {
-      showToast("Пожалуйста, укажите контактный телефон или ник", 3500);
-      document.getElementById("order-phone").focus();
-      return;
-    }
+      let time = timeVal;
+      if (timeVal === "custom") {
+        const customVal = customTimeInput ? customTimeInput.value.trim() : "";
+        time = customVal ? `К точному времени: ${customVal}` : "К точному времени (по согласованию)";
+      }
 
-    const todayStr = new Date().toISOString().split("T")[0];
-    const isToday = date === todayStr;
-    const dateDisplay = isToday ? `${date} (⚡ Срочно сегодня)` : date;
+      if (!name) {
+        showToast("Пожалуйста, укажите ваше имя", 3500);
+        if (nameInput) nameInput.focus();
+        return;
+      }
 
-    const formData = {
-      name,
-      phone,
-      date: dateDisplay,
-      time,
-      deliveryType,
-      address,
-      pickupAddress: (profile.pickupAddress || "Москва, м. Раменки").trim(),
-      comment,
-      messenger: selectedMessenger
-    };
+      if (!phone) {
+        showToast("Пожалуйста, укажите контактный телефон или ник", 3500);
+        if (phoneInput) phoneInput.focus();
+        return;
+      }
 
-    const orderText = Cart.generateOrderText(formData);
+      const todayStr = new Date().toISOString().split("T")[0];
+      const isToday = date === todayStr;
+      const dateDisplay = isToday ? `${date} (⚡ Срочно сегодня)` : (date || "Как можно скорее");
 
-    let currentOrderText = "";
-    let currentMessengerUrl = "";
+      const pickupAddr = (profile.pickupAddress || "Москва, м. Раменки").trim();
 
-    window.confirmOrderFinished = () => {
-      Cart.clear();
-      closeCart();
-      showToast("Спасибо за заказ! Шеф Люда свяжется с вами в течение 10-15 минут 🍰✨", 5000);
-      backToOrderEdit();
-    };
+      const formData = {
+        name,
+        phone,
+        date: dateDisplay,
+        time,
+        deliveryType,
+        address,
+        pickupAddress: pickupAddr,
+        comment,
+        messenger: selectedMessenger
+      };
 
-    window.copyOrderTextAgain = () => {
-      if (currentOrderText && navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(currentOrderText)
-          .then(() => showToast("Чек заказа скопирован в буфер обмена! 📋"))
-          .catch(() => showToast("Чек скопирован! 📋"));
+      const orderText = Cart.generateOrderText(formData);
+
+      let currentOrderText = orderText;
+      let currentMessengerUrl = "";
+
+      window.confirmOrderFinished = () => {
+        Cart.clear();
+        closeCart();
+        showToast("Спасибо за заказ! Шеф Люда свяжется с вами в течение 10-15 минут 🍰✨", 5000);
+        backToOrderEdit();
+      };
+
+      window.copyOrderTextAgain = () => {
+        if (currentOrderText && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(currentOrderText)
+            .then(() => showToast("Чек заказа скопирован в буфер обмена! 📋"))
+            .catch(() => showToast("Чек скопирован! 📋"));
+        } else {
+          showToast("Чек заказа скопирован! 📋");
+        }
+      };
+
+      window.retryOpenMessenger = () => {
+        if (currentMessengerUrl) {
+          window.open(currentMessengerUrl, "_blank");
+        }
+      };
+
+      window.backToOrderEdit = () => {
+        const mainFlow = document.getElementById("cart-main-flow");
+        const successScreen = document.getElementById("order-success-screen");
+        if (mainFlow) mainFlow.style.display = "block";
+        if (successScreen) successScreen.style.display = "none";
+      };
+
+      const rawTg = (profile.telegramUsername || "").trim();
+      const cleanTg = rawTg.replace(/^https?:\/\/t\.me\//i, "").replace(/^t\.me\//i, "").replace(/^@/, "").trim();
+
+      let rawMax = (profile.maxUsername || "").trim();
+      const maxUrlMatch = rawMax.match(/https?:\/\/[^\s]+/i);
+      if (maxUrlMatch) {
+        rawMax = maxUrlMatch[0];
+      }
+      const cleanMax = rawMax.replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "").trim();
+
+      const targetUser = selectedMessenger === "telegram" ? cleanTg : cleanMax;
+
+      if (!targetUser || targetUser === "none") {
+        showToast("💡 Чек скопирован в буфер! Для автоматической отправки укажите свой логин в Кабинете кондитера → «Контакты & ссылки».", 4500);
+        // Показываем экран подтверждения, чтобы гость мог скопировать чек
+        const mainFlow = document.getElementById("cart-main-flow");
+        const successScreen = document.getElementById("order-success-screen");
+        if (mainFlow) mainFlow.style.display = "none";
+        if (successScreen) successScreen.style.display = "block";
+        return;
+      }
+
+      let messengerUrl = "";
+      if (selectedMessenger === "telegram") {
+        const encodedText = encodeURIComponent(orderText);
+        messengerUrl = `https://t.me/${cleanTg}?text=${encodedText}`;
       } else {
-        showToast("Чек заказа скопирован! 📋");
+        let baseMax = rawMax;
+        if (!/^https?:\/\//i.test(baseMax)) {
+          if (/^(u|join)\//i.test(baseMax)) {
+            baseMax = `https://max.ru/${baseMax}`;
+          } else {
+            baseMax = `https://max.ru/u/${baseMax}`;
+          }
+        }
+        messengerUrl = baseMax;
       }
-    };
 
-    window.retryOpenMessenger = () => {
-      if (currentMessengerUrl) {
-        window.open(currentMessengerUrl, "_blank");
+      currentMessengerUrl = messengerUrl;
+
+      // Автоматически копируем чек в буфер обмена
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(orderText).catch(() => {});
       }
-    };
 
-    window.backToOrderEdit = () => {
+      try {
+        window.open(messengerUrl, "_blank");
+      } catch (e) {
+        console.warn("Не удалось автоматически открыть окно", e);
+      }
+
+      // Переключаем на экран подтверждения (корзина сохраняется, пока гость не нажмет «Заказ отправлен»)
       const mainFlow = document.getElementById("cart-main-flow");
       const successScreen = document.getElementById("order-success-screen");
-      if (mainFlow) mainFlow.style.display = "block";
-      if (successScreen) successScreen.style.display = "none";
-    };
-
-    const profile = (typeof CatalogManager !== "undefined" && CatalogManager.getProfile) 
-      ? CatalogManager.getProfile() 
-      : {};
-
-    const rawTg = (profile.telegramUsername || "").trim();
-    const cleanTg = rawTg.replace(/^https?:\/\/t\.me\//i, "").replace(/^t\.me\//i, "").replace(/^@/, "").trim();
-
-    let rawMax = (profile.maxUsername || "").trim();
-    const maxUrlMatch = rawMax.match(/https?:\/\/[^\s]+/i);
-    if (maxUrlMatch) {
-      rawMax = maxUrlMatch[0];
-    }
-    const cleanMax = rawMax.replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "").trim();
-
-    const targetUser = selectedMessenger === "telegram" ? cleanTg : cleanMax;
-
-    currentOrderText = orderText;
-
-    if (!targetUser || targetUser === "none") {
-      showToast("💡 Чек скопирован в буфер! Для автоматической отправки укажите свой логин в Кабинете кондитера → «Контакты & ссылки».", 4500);
-      // Показываем экран подтверждения, чтобы гость мог скопировать чек
-      const mainFlow = document.getElementById("cart-main-flow");
-      const successScreen = document.getElementById("order-success-screen");
+      const msgHint = document.getElementById("order-success-msg");
       if (mainFlow) mainFlow.style.display = "none";
       if (successScreen) successScreen.style.display = "block";
-      return;
-    }
-
-    let messengerUrl = "";
-    if (selectedMessenger === "telegram") {
-      const encodedText = encodeURIComponent(orderText);
-      messengerUrl = `https://t.me/${cleanTg}?text=${encodedText}`;
-    } else {
-      let baseMax = rawMax;
-      if (!/^https?:\/\//i.test(baseMax)) {
-        if (/^(u|join)\//i.test(baseMax)) {
-          baseMax = `https://max.ru/${baseMax}`;
+      if (msgHint) {
+        if (selectedMessenger === "telegram") {
+          msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>Telegram</b>.<br />Нажмите <b>«Отправить»</b> в открывшемся чате.`;
         } else {
-          baseMax = `https://max.ru/u/${baseMax}`;
+          msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>MAX</b>.<br />Чек скопирован в буфер обмена: просто <b>вставьте</b> его в поле сообщения и нажмите <b>«Отправить»</b>.`;
         }
       }
-      messengerUrl = baseMax;
+      showToast("Заказ сформирован! Чек открыт в чате 💌", 3500);
+    } catch (err) {
+      console.error("Ошибка при оформлении заказа:", err);
+      showToast("Произошла ошибка при отправке заказа. Попробуйте еще раз.", 4000);
     }
-
-    currentMessengerUrl = messengerUrl;
-
-    try {
-      window.open(messengerUrl, "_blank");
-    } catch (e) {
-      console.warn("Не удалось автоматически открыть окно", e);
-    }
-
-    // Переключаем на экран подтверждения (корзина сохраняется, пока гость не нажмет «Заказ отправлен»)
-    const mainFlow = document.getElementById("cart-main-flow");
-    const successScreen = document.getElementById("order-success-screen");
-    const msgHint = document.getElementById("order-success-msg");
-    if (mainFlow) mainFlow.style.display = "none";
-    if (successScreen) successScreen.style.display = "block";
-    if (msgHint) {
-      if (selectedMessenger === "telegram") {
-        msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>Telegram</b>.<br />Нажмите <b>«Отправить»</b> в открывшемся чате.`;
-      } else {
-        msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>MAX</b>.<br />Чек скопирован в буфер обмена: просто <b>вставьте</b> его в поле сообщения и нажмите <b>«Отправить»</b>.`;
-      }
-    }
-    showToast("Заказ сформирован! Чек открыт в чате 💌", 3500);
   };
 
   // Выбор даты "Срочно сегодня"
