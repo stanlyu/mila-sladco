@@ -438,7 +438,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const rawTg = (profile.telegramUsername || "").trim();
     const cleanTg = rawTg.replace(/^https?:\/\/t\.me\//i, "").replace(/^t\.me\//i, "").replace(/^@/, "").trim();
 
-    const rawMax = (profile.maxUsername || "").trim();
+    let rawMax = (profile.maxUsername || "").trim();
+    const maxUrlMatch = rawMax.match(/https?:\/\/[^\s]+/i);
+    if (maxUrlMatch) {
+      rawMax = maxUrlMatch[0];
+    }
     const cleanMax = rawMax.replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "").trim();
 
     const targetUser = selectedMessenger === "telegram" ? cleanTg : cleanMax;
@@ -569,7 +573,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const maxBtn = document.getElementById("link-btn-max");
     if (maxBtn) {
       maxBtn.style.display = (profile.showMaxDirect !== false) ? "flex" : "none";
-      const rawMax = (profile.maxUsername || "").trim();
+      let rawMax = (profile.maxUsername || "").trim();
+      const maxUrlMatch = rawMax.match(/https?:\/\/[^\s]+/i);
+      if (maxUrlMatch) {
+        rawMax = maxUrlMatch[0];
+      }
       if (rawMax && rawMax !== "none") {
         let baseMax = rawMax;
         if (!/^https?:\/\//i.test(baseMax)) {

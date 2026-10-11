@@ -727,7 +727,11 @@ const AdminPanel = {
 
     const cleanTg = (tgUser ? tgUser.value.trim() : "").replace(/^@/, "");
     const tgChannel = tgChan ? tgChan.value.trim() : "";
-    const maxLogin = (maxUser ? maxUser.value.trim() : "").replace(/^@/, "");
+    let maxLogin = (maxUser ? maxUser.value.trim() : "").replace(/^@/, "");
+    const maxUrlMatch = maxLogin.match(/https?:\/\/[^\s]+/i);
+    if (maxUrlMatch) {
+      maxLogin = maxUrlMatch[0];
+    }
     const maxChannel = maxChan ? maxChan.value.trim() : "";
     const pickupVal = (pickupInput && pickupInput.value.trim()) ? pickupInput.value.trim() : "Москва, м. Раменки";
     const phoneVal = phoneInput ? phoneInput.value.trim() : "+7 (915) 318-18-19";
