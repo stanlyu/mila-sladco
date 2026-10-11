@@ -111,7 +111,21 @@ const SyncService = {
         console.warn("[SyncService] GitHub API недоступен, пробуем статический файл:", e.message);
       }
 
-      // 2. Если через API не удалось, пробуем статический файл data/catalog.json с обходом кэша
+      // 2. Если через API не удалось, пробуем прямой raw.githubusercontent.com с обходом кэша
+      if (!catalog) {
+        try {
+          const rawUrl = `https://raw.githubusercontent.com/${cfg.githubOwner}/${cfg.githubRepo}/${cfg.githubBranch}/data/catalog.json?t=${Date.now()}`;
+          const rawRes = await fetch(rawUrl, { cache: "no-store" });
+          if (rawRes.ok) {
+            catalog = await rawRes.json();
+            source = "github_raw";
+          }
+        } catch (e) {
+          console.warn("[SyncService] raw.githubusercontent.com недоступен:", e.message);
+        }
+      }
+
+      // 3. Если и raw не ответил, пробуем локальный статический data/catalog.json с хостинга
       if (!catalog) {
         try {
           const staticRes = await fetch(`data/catalog.json?v=${Date.now()}`, { cache: "no-store" });
@@ -124,7 +138,7 @@ const SyncService = {
         }
       }
 
-      // 3. Аналогично для профиля
+      // 4. Аналогично для профиля
       if (catalog) {
         try {
           const profApiUrl = `https://api.github.com/repos/${cfg.githubOwner}/${cfg.githubRepo}/contents/data/profile.json?ref=${cfg.githubBranch}&t=${Date.now()}`;
@@ -137,6 +151,18 @@ const SyncService = {
           }
         } catch (e) {
           console.warn("[SyncService] Ошибка чтения профиля из GitHub API:", e.message);
+        }
+
+        if (!profile) {
+          try {
+            const rawProfUrl = `https://raw.githubusercontent.com/${cfg.githubOwner}/${cfg.githubRepo}/${cfg.githubBranch}/data/profile.json?t=${Date.now()}`;
+            const profRawRes = await fetch(rawProfUrl, { cache: "no-store" });
+            if (profRawRes.ok) {
+              profile = await profRawRes.json();
+            }
+          } catch (e) {
+            console.warn("[SyncService] raw профиль недоступен", e.message);
+          }
         }
 
         if (!profile) {
