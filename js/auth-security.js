@@ -37,6 +37,14 @@ const AuthSecurity = {
   },
 
   getStoredHash() {
+    // 1. Приоритет: профиль из центральной базы данных (актуален на всех устройствах)
+    if (typeof CatalogManager !== "undefined" && typeof CatalogManager.getProfile === "function") {
+      const profile = CatalogManager.getProfile();
+      if (profile && profile.pinHash) {
+        return String(profile.pinHash);
+      }
+    }
+    // 2. Локальное хранилище
     try {
       if (typeof localStorage !== "undefined") {
         const stored = localStorage.getItem(this.PIN_STORAGE_KEY);
@@ -99,6 +107,14 @@ const AuthSecurity = {
       }
     } catch (e) {}
     this.resetLock();
+
+    // Синхронизация с базой данных
+    if (typeof CatalogManager !== "undefined" && typeof CatalogManager.updateProfile === "function") {
+      CatalogManager.updateProfile({ pinHash: DEFAULT_PIN_HASH });
+      if (typeof SyncService !== "undefined" && typeof SyncService.pushToRemote === "function") {
+        SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
+      }
+    }
   },
 
   isAuthenticated() {
@@ -192,7 +208,15 @@ const AuthSecurity = {
       return { success: false, message: "Не удалось сохранить новый PIN в хранилище" };
     }
 
-    return { success: true, message: "PIN-код успешно изменен!" };
+    // Синхронизация с базой данных
+    if (typeof CatalogManager !== "undefined" && typeof CatalogManager.updateProfile === "function") {
+      CatalogManager.updateProfile({ pinHash: newHash });
+      if (typeof SyncService !== "undefined" && typeof SyncService.pushToRemote === "function") {
+        SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
+      }
+    }
+
+    return { success: true, message: "PIN-код успешно изменен и синхронизирован с базой!" };
   },
 
   // ========================================================

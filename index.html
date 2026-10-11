@@ -15,7 +15,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍰</text></svg>" />
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=2.4" />
+  <link rel="stylesheet" href="css/style.css?v=2.5" />
 </head>
 <body>
 
@@ -526,30 +526,6 @@
           </div>
         </div>
 
-        <!-- Карточка синхронизации с базой данных GitHub / Cloud -->
-        <div class="admin-sync-card">
-          <div class="admin-sync-header">
-            <div class="admin-sync-status-wrap">
-              <span id="sync-status-indicator" class="sync-dot sync-dot-online"></span>
-              <div>
-                <div id="sync-status-title" class="admin-sync-title">База данных GitHub</div>
-                <div id="sync-status-desc" class="admin-sync-desc">Загрузка статуса...</div>
-              </div>
-            </div>
-            <button type="button" class="btn-sync-settings" onclick="AdminPanel.openDatabaseModal()" title="Настройки подключения к базе">
-              ⚙️ Настройки
-            </button>
-          </div>
-          <div class="admin-sync-actions">
-            <button type="button" class="btn-sync-action" onclick="AdminPanel.pullFromRemoteDatabase()">
-              🔄 Загрузить из GitHub
-            </button>
-            <button type="button" class="btn-sync-action btn-sync-push" onclick="AdminPanel.pushToRemoteDatabase()">
-              ☁️ Зафиксировать в базе
-            </button>
-          </div>
-        </div>
-
         <div class="admin-top-actions">
           <div style="display: inline-flex; align-items: center; gap: 4px;">
             <button type="button" class="btn-admin-primary" onclick="AdminPanel.openAddNew()">
@@ -821,57 +797,6 @@
   </div>
 
   <!-- ========================================================
-       МОДАЛЬНОЕ ОКНО: НАСТРОЙКИ СИНХРОНИЗАЦИИ С GITHUB / БАЗОЙ
-       ======================================================== -->
-  <div id="database-settings-modal" class="modal-overlay" onclick="AdminPanel.closeDatabaseModal()">
-    <div class="bottom-sheet" onclick="event.stopPropagation()">
-      <div class="sheet-drag-handle"></div>
-      <button type="button" class="sheet-close-btn" onclick="AdminPanel.closeDatabaseModal()" aria-label="Закрыть">✕</button>
-
-      <div style="padding: 0 20px 32px; max-height: 80vh; overflow-y: auto;">
-        <h3 class="admin-sheet-title" style="margin-bottom: 6px;">☁️ База данных GitHub</h3>
-        <p style="font-size: 13px; color: var(--color-muted); line-height: 1.45; margin-bottom: 16px;">
-          Чтобы изменения цен, десертов и контактов мгновенно отображались у всех покупателей на сайте, подключите запись в репозиторий GitHub.
-        </p>
-
-        <div class="form-group" style="margin-bottom: 12px;">
-          <label class="form-label" for="sync-setting-repo">Репозиторий GitHub</label>
-          <input type="text" id="sync-setting-repo" class="form-input" value="stanlyu/mila-sladco" placeholder="owner/repo" />
-        </div>
-
-        <div class="form-group" style="margin-bottom: 12px;">
-          <label class="form-label" for="sync-setting-branch">Ветка репозитория</label>
-          <input type="text" id="sync-setting-branch" class="form-input" value="main" placeholder="main" />
-        </div>
-
-        <div class="form-group" style="margin-bottom: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <label class="form-label" for="sync-setting-token" style="margin-bottom: 0;">GitHub Token (PAT)</label>
-            <button type="button" onclick="AdminPanel.toggleTokenVisibility()" style="background: none; border: none; font-size: 11px; color: var(--color-gold); font-weight: 600; cursor: pointer;">
-              👁️ <span id="token-toggle-label">Показать</span>
-            </button>
-          </div>
-          <input type="password" id="sync-setting-token" class="form-input" placeholder="ghp_... или github_pat_..." autocomplete="off" />
-          <div style="font-size: 11px; color: var(--color-muted); line-height: 1.4; margin-top: 6px;">
-            🔑 <b>Как получить токен за 1 минуту:</b> В GitHub перейдите в <i>Settings → Developer Settings → Personal access tokens → Fine-grained tokens</i>. Выберите репозиторий <b>mila-sladco</b> и право <b>Contents: Read and write</b>.
-          </div>
-        </div>
-
-        <div id="sync-test-result" style="display: none; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 12px; margin-bottom: 14px;"></div>
-
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button type="button" class="btn-send-order max-style" onclick="AdminPanel.saveDatabaseSettings()">
-            💾 Сохранить настройки
-          </button>
-          <button type="button" class="btn-admin-secondary" onclick="AdminPanel.testDatabaseConnection()">
-            ⚡ Проверить подключение к GitHub
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================
        МОДАЛЬНОЕ ОКНО: ЗАЩИТА ТЕЛЕФОНА ОТ БОТОВ И СПАМА
        ======================================================== -->
   <div id="phone-protect-modal" class="modal-overlay" onclick="PhoneProtection.closeModal()">
@@ -1020,12 +945,12 @@
   <div id="toast-msg" class="toast-msg"></div>
 
   <!-- Scripts (подключение модулей архитектуры) -->
-  <script src="js/catalog-manager.js?v=2.4"></script>
-  <script src="js/sync-service.js?v=2.4"></script>
-  <script src="js/auth-security.js?v=2.4"></script>
-  <script src="js/admin.js?v=2.4"></script>
-  <script src="js/cart.js?v=2.4"></script>
-  <script src="js/app.js?v=2.4"></script>
+  <script src="js/catalog-manager.js?v=2.5"></script>
+  <script src="js/sync-service.js?v=2.5"></script>
+  <script src="js/auth-security.js?v=2.5"></script>
+  <script src="js/admin.js?v=2.5"></script>
+  <script src="js/cart.js?v=2.5"></script>
+  <script src="js/app.js?v=2.5"></script>
 
 </body>
 </html>

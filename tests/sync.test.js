@@ -19,23 +19,34 @@ if (typeof global.localStorage === "undefined") {
   };
 }
 
-test("SyncService: инициализация и конфигурация по умолчанию", () => {
+test("SyncService: инициализация и конфигурация по умолчанию (Zero-Token Cloud Ready)", () => {
   global.localStorage.clear();
   const cfg = SyncService.init();
   assert.strictEqual(cfg.githubOwner, "stanlyu");
   assert.strictEqual(cfg.githubRepo, "mila-sladco");
   assert.strictEqual(cfg.githubBranch, "main");
-  assert.strictEqual(SyncService.hasWriteAccess(), false);
+  assert.ok(cfg.cloudCatalogUrl.includes("npoint.io"));
+  assert.ok(cfg.cloudProfileUrl.includes("npoint.io"));
+  // По умолчанию запись доступна через облачную базу данных без ввода токенов кондитером
+  assert.strictEqual(SyncService.hasWriteAccess(), true);
 });
 
-test("SyncService: сохранение настроек и токена", () => {
+test("SyncService: проверка прав на запись с токеном и без облака", () => {
+  // Если отключить облако и очистить токен — запись недоступна
+  SyncService.saveConfig({ cloudCatalogUrl: "", githubToken: "" });
+  assert.strictEqual(SyncService.hasWriteAccess(), false);
+
+  // С токеном GitHub — запись доступна
   SyncService.saveConfig({ githubToken: "ghp_mocktest1234567890abcdef" });
   assert.strictEqual(SyncService.hasWriteAccess(), true);
   assert.strictEqual(SyncService.getConfig().githubToken, "ghp_mocktest1234567890abcdef");
 
-  // Очистка токена
-  SyncService.saveConfig({ githubToken: "" });
-  assert.strictEqual(SyncService.hasWriteAccess(), false);
+  // Восстанавливаем облачную конфигурацию
+  SyncService.saveConfig({
+    cloudCatalogUrl: DEFAULT_SYNC_CONFIG.cloudCatalogUrl,
+    githubToken: ""
+  });
+  assert.strictEqual(SyncService.hasWriteAccess(), true);
 });
 
 test("SyncService: UTF-8 safe кодирование и декодирование в Base64", () => {
@@ -47,9 +58,15 @@ test("SyncService: UTF-8 safe кодирование и декодировани
   assert.strictEqual(decoded, sample);
 });
 
-test("SyncService: pushToRemote без токена возвращает понятную ошибку без сбоя", async () => {
-  SyncService.saveConfig({ githubToken: "" });
+test("SyncService: pushToRemote без токена и без облака возвращает понятную ошибку без сбоя", async () => {
+  SyncService.saveConfig({ cloudCatalogUrl: "", githubToken: "" });
   const result = await SyncService.pushToRemote([{ id: "test", title: "Торт" }]);
   assert.strictEqual(result.success, false);
   assert.strictEqual(result.reason, "no_token");
+
+  // Восстанавливаем облачную конфигурацию
+  SyncService.saveConfig({
+    cloudCatalogUrl: DEFAULT_SYNC_CONFIG.cloudCatalogUrl,
+    cloudProfileUrl: DEFAULT_SYNC_CONFIG.cloudProfileUrl
+  });
 });

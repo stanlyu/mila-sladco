@@ -141,7 +141,6 @@ const AdminPanel = {
     if (!modal) return;
     this.updateChefAvatarPreview();
     this.renderAdminList();
-    this.updateSyncCardStatus();
     modal.classList.add("open");
 
     // Если Люда впервые в кабинете — запускаем интерактивный тур
@@ -175,7 +174,7 @@ const AdminPanel = {
           CatalogManager.updateProfile({ avatar: compressed });
           this.updateChefAvatarPreview();
           showToast("Фото шеф-кондитера обновлено! 📸✨");
-          if (SyncService.hasWriteAccess()) {
+          if (typeof SyncService !== "undefined") {
             SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
           }
           return;
@@ -189,7 +188,7 @@ const AdminPanel = {
         CatalogManager.updateProfile({ avatar: base64Url });
         this.updateChefAvatarPreview();
         showToast("Фото шеф-кондитера успешно обновлено! 📸✨");
-        if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
+        if (typeof SyncService !== "undefined") {
           SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
         }
       };
@@ -248,8 +247,8 @@ const AdminPanel = {
     }
     CatalogManager.updateProduct(id, { price: priceNum });
     showToast("Цена успешно обновлена! ✨");
-    if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
-      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then(() => this.updateSyncCardStatus());
+    if (typeof SyncService !== "undefined") {
+      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
     }
   },
 
@@ -257,8 +256,8 @@ const AdminPanel = {
     const newStatus = CatalogManager.toggleAvailability(id);
     this.renderAdminList();
     showToast(newStatus ? "Десерт снова на витрине!" : "Десерт скрыт с витрины (закончился)");
-    if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
-      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then(() => this.updateSyncCardStatus());
+    if (typeof SyncService !== "undefined") {
+      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
     }
   },
 
@@ -269,8 +268,8 @@ const AdminPanel = {
       CatalogManager.deleteProduct(id);
       this.renderAdminList();
       showToast("Десерт удален");
-      if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
-        SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then(() => this.updateSyncCardStatus());
+      if (typeof SyncService !== "undefined") {
+        SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
       }
     }
   },
@@ -401,14 +400,9 @@ const AdminPanel = {
     this.closeEditModal();
     this.renderAdminList();
 
-    // Автоматическая фиксация в базе данных GitHub при настроенном доступе
-    if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
-      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then((r) => {
-        if (r.success) {
-          showToast("База данных GitHub обновлена! ☁️✨");
-          this.updateSyncCardStatus();
-        }
-      });
+    // Фоновая синхронизация с облаком
+    if (typeof SyncService !== "undefined") {
+      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
     }
   },
 
@@ -504,6 +498,9 @@ const AdminPanel = {
       this.updateChefAvatarPreview();
       if (typeof renderProfile === "function") {
         renderProfile();
+      }
+      if (typeof SyncService !== "undefined") {
+        SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
       }
       showToast("Все настройки сброшены до стандартных (PIN 1819) ✨", 4000);
     }
@@ -643,8 +640,8 @@ const AdminPanel = {
       renderProfile();
     }
     showToast("Контакты и настройки ссылок обновлены! 📱✨");
-    if (typeof SyncService !== "undefined" && SyncService.hasWriteAccess()) {
-      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile()).then(() => this.updateSyncCardStatus());
+    if (typeof SyncService !== "undefined") {
+      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
     }
   },
 
@@ -779,192 +776,6 @@ const AdminPanel = {
   hideBubble() {
     const popover = document.getElementById("tooltip-popover");
     if (popover) popover.classList.remove("open");
-  },
-
-  // ==========================================
-  // Синхронизация с базой данных GitHub
-  // ==========================================
-  updateSyncCardStatus() {
-    const dot = document.getElementById("sync-status-indicator");
-    const title = document.getElementById("sync-status-title");
-    const desc = document.getElementById("sync-status-desc");
-    if (!dot || !title || !desc) return;
-
-    if (typeof SyncService === "undefined") {
-      dot.className = "sync-dot sync-dot-offline";
-      title.textContent = "База данных (Локальный режим)";
-      desc.textContent = "Модуль синхронизации недоступен";
-      return;
-    }
-
-    const cfg = SyncService.getConfig();
-    const hasWrite = SyncService.hasWriteAccess();
-
-    if (hasWrite) {
-      dot.className = "sync-dot sync-dot-online";
-      title.textContent = "База данных GitHub: Подключена";
-      const timeStr = cfg.lastSyncTime ? new Date(cfg.lastSyncTime).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "готово к записи";
-      desc.textContent = `Репозиторий ${cfg.githubOwner}/${cfg.githubRepo} • Синхр: ${timeStr}`;
-    } else {
-      dot.className = "sync-dot sync-dot-offline";
-      title.textContent = "База данных GitHub (Только чтение)";
-      desc.textContent = "Для автозаписи с телефона укажите GitHub Token в Настройках";
-    }
-  },
-
-  openDatabaseModal() {
-    const modal = document.getElementById("database-settings-modal");
-    if (!modal) return;
-    if (typeof SyncService !== "undefined") {
-      const cfg = SyncService.getConfig();
-      const repoInput = document.getElementById("sync-setting-repo");
-      const branchInput = document.getElementById("sync-setting-branch");
-      const tokenInput = document.getElementById("sync-setting-token");
-      if (repoInput) repoInput.value = `${cfg.githubOwner}/${cfg.githubRepo}`;
-      if (branchInput) branchInput.value = cfg.githubBranch || "main";
-      if (tokenInput) tokenInput.value = cfg.githubToken || "";
-    }
-    const testBox = document.getElementById("sync-test-result");
-    if (testBox) testBox.style.display = "none";
-    modal.classList.add("open");
-  },
-
-  closeDatabaseModal() {
-    const modal = document.getElementById("database-settings-modal");
-    if (modal) modal.classList.remove("open");
-  },
-
-  toggleTokenVisibility() {
-    const tokenInput = document.getElementById("sync-setting-token");
-    const label = document.getElementById("token-toggle-label");
-    if (!tokenInput) return;
-    if (tokenInput.type === "password") {
-      tokenInput.type = "text";
-      if (label) label.textContent = "Скрыть";
-    } else {
-      tokenInput.type = "password";
-      if (label) label.textContent = "Показать";
-    }
-  },
-
-  saveDatabaseSettings() {
-    const repoInput = document.getElementById("sync-setting-repo");
-    const branchInput = document.getElementById("sync-setting-branch");
-    const tokenInput = document.getElementById("sync-setting-token");
-
-    const fullRepo = repoInput ? repoInput.value.trim() : "stanlyu/mila-sladco";
-    const parts = fullRepo.split("/");
-    const owner = parts[0] || "stanlyu";
-    const repo = parts[1] || "mila-sladco";
-    const branch = branchInput ? branchInput.value.trim() : "main";
-    const token = tokenInput ? tokenInput.value.trim() : "";
-
-    if (typeof SyncService !== "undefined") {
-      SyncService.saveConfig({
-        githubOwner: owner,
-        githubRepo: repo,
-        githubBranch: branch,
-        githubToken: token
-      });
-    }
-
-    this.updateSyncCardStatus();
-    this.closeDatabaseModal();
-    showToast("Настройки базы данных GitHub сохранены! ☁️✨");
-  },
-
-  async testDatabaseConnection() {
-    const testBox = document.getElementById("sync-test-result");
-    if (!testBox) return;
-    testBox.style.display = "block";
-    testBox.style.background = "#E7F5FF";
-    testBox.style.color = "#1971C2";
-    testBox.textContent = "Проверка связи с GitHub API... ⏳";
-
-    const repoInput = document.getElementById("sync-setting-repo");
-    const branchInput = document.getElementById("sync-setting-branch");
-    const tokenInput = document.getElementById("sync-setting-token");
-
-    const fullRepo = repoInput ? repoInput.value.trim() : "stanlyu/mila-sladco";
-    const branch = branchInput ? branchInput.value.trim() : "main";
-    const token = tokenInput ? tokenInput.value.trim() : "";
-
-    const headers = { Accept: "application/vnd.github.v3+json" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-
-    try {
-      const res = await fetch(`https://api.github.com/repos/${fullRepo}/contents/data/catalog.json?ref=${branch}&t=${Date.now()}`, { headers });
-      if (res.ok) {
-        if (token) {
-          testBox.style.background = "#EBFBEE";
-          testBox.style.color = "#2B8A3E";
-          testBox.innerHTML = `✅ <b>Связь установлена!</b> Репозиторий найден, токен авторизован для записи в <code>data/catalog.json</code>.`;
-        } else {
-          testBox.style.background = "#FFF9DB";
-          testBox.style.color = "#F08C00";
-          testBox.innerHTML = `⚠️ <b>Чтение доступно</b>, но токен для записи не введен. Для сохранения изменений на GitHub добавьте Personal Access Token.`;
-        }
-      } else {
-        const err = await res.json().catch(() => ({}));
-        testBox.style.background = "#FFF5F5";
-        testBox.style.color = "#C92A2A";
-        testBox.innerHTML = `❌ <b>Ошибка GitHub API:</b> ${err.message || res.statusText} (статус ${res.status})`;
-      }
-    } catch (err) {
-      testBox.style.background = "#FFF5F5";
-      testBox.style.color = "#C92A2A";
-      testBox.innerHTML = `❌ <b>Ошибка сети:</b> ${err.message}`;
-    }
-  },
-
-  async pullFromRemoteDatabase() {
-    if (typeof SyncService === "undefined") return;
-    const dot = document.getElementById("sync-status-indicator");
-    if (dot) dot.className = "sync-dot sync-dot-syncing";
-    showToast("Загрузка актуального меню из базы данных... ⏳");
-
-    try {
-      const res = await SyncService.pullFromRemote();
-      if (res.success) {
-        this.renderAdminList();
-        this.updateChefAvatarPreview();
-        this.updateSyncCardStatus();
-        showToast(`✅ Загружено ${res.count} десертов из базы (${res.source === "github_api" ? "GitHub API" : "GitHub Pages"})!`);
-      } else {
-        showToast("⚠️ Не удалось загрузить из базы: " + (res.reason || res.error || "ошибка"));
-        this.updateSyncCardStatus();
-      }
-    } catch (err) {
-      showToast("❌ Ошибка при загрузке: " + err.message);
-      this.updateSyncCardStatus();
-    }
-  },
-
-  async pushToRemoteDatabase() {
-    if (typeof SyncService === "undefined") return;
-    if (!SyncService.hasWriteAccess()) {
-      showToast("⚠️ Для сохранения на GitHub укажите токен в Настройках базы");
-      this.openDatabaseModal();
-      return;
-    }
-
-    const dot = document.getElementById("sync-status-indicator");
-    if (dot) dot.className = "sync-dot sync-dot-syncing";
-    showToast("Отправка базы данных на GitHub... ☁️⏳");
-
-    try {
-      const res = await SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
-      if (res.success) {
-        this.updateSyncCardStatus();
-        showToast("✅ База на GitHub успешно обновлена! Все покупатели видят свежие десерты. ✨");
-      } else {
-        this.updateSyncCardStatus();
-        showToast("❌ Не удалось обновить GitHub: " + (res.message || "ошибка"));
-      }
-    } catch (err) {
-      this.updateSyncCardStatus();
-      showToast("❌ Ошибка сети при отправке: " + err.message);
-    }
   }
 };
 

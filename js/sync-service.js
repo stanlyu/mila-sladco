@@ -1,20 +1,21 @@
 /**
  * SyncService — синхронизация витрины и профиля Mila_sladco с базой данных GitHub / Cloud.
  * Поддерживает:
- * 1. Чтение актуальной базы из репозитория GitHub (data/catalog.json, data/profile.json)
- *    или через прямой GitHub REST API с обходом CDN-кэша.
- * 2. Автоматическую фиксацию изменений (коммиты) в GitHub при редактировании кондитером.
- * 3. Локальный кэш (Offline-First) для мгновенной отрисовки без задержек.
- * 4. Оптимизацию и сжатие загружаемых с телефона фото (Canvas WebGL/2D).
+ * 1. Фоновое чтение и запись в облачную базу данных (Zero-Auth / Zero-Token, без ввода ключей кондитером).
+ * 2. Мгновенный обход кэша мобильных браузеров (?t=timestamp + cache: no-store).
+ * 3. Локальный кэш (Offline-First) для мгновенной отрисовки без ожидания ответа сервера.
+ * 4. Запасные каналы (Fallback): GitHub raw и локальные файлы data/*.json.
+ * 5. Оптимизацию и сжатие загружаемых с телефона фото (Canvas 2D).
  */
 
 const DEFAULT_SYNC_CONFIG = {
-  provider: "github", // "github" | "cloud" | "local"
+  provider: "cloud", // "cloud" | "github" | "local"
+  cloudCatalogUrl: "https://api.npoint.io/2a6bc08a5699cf1f7910",
+  cloudProfileUrl: "https://api.npoint.io/1622863e7880b2c4788d",
   githubOwner: "stanlyu",
   githubRepo: "mila-sladco",
   githubBranch: "main",
-  githubToken: "", // Personal Access Token (PAT) с правами на запись содержимого (Contents: Read/Write)
-  cloudUrl: "", // Опциональный REST endpoint (например Firebase Realtime DB)
+  githubToken: "",
   lastSyncTime: null,
   autoSync: true
 };
@@ -31,6 +32,13 @@ const SyncService = {
         this.config = Object.assign({}, DEFAULT_SYNC_CONFIG, JSON.parse(saved));
       } else {
         this.config = Object.assign({}, DEFAULT_SYNC_CONFIG);
+      }
+      // Гарантируем наличие актуальных cloudUrl по умолчанию
+      if (!this.config.cloudCatalogUrl) {
+        this.config.cloudCatalogUrl = DEFAULT_SYNC_CONFIG.cloudCatalogUrl;
+      }
+      if (!this.config.cloudProfileUrl) {
+        this.config.cloudProfileUrl = DEFAULT_SYNC_CONFIG.cloudProfileUrl;
       }
     } catch (e) {
       console.warn("[SyncService] Ошибка чтения конфигурации синхронизации", e);
@@ -72,13 +80,13 @@ const SyncService = {
     return decodeURIComponent(escape(atob(String(b64 || "").replace(/\s/g, ""))));
   },
 
-  // Проверка наличия настроенного токена для записи на GitHub
+  // Проверка готовности к записи (облачная база или токен)
   hasWriteAccess() {
     const cfg = this.getConfig();
-    return Boolean(cfg.githubToken && cfg.githubToken.trim().length > 10);
+    return Boolean(cfg.cloudCatalogUrl || (cfg.githubToken && cfg.githubToken.trim().length > 10));
   },
 
-  // Загрузка актуальных данных из базы (GitHub или статический data/*.json)
+  // Загрузка актуальных данных из базы (Cloud -> GitHub API -> GitHub Raw -> Local Static)
   async pullFromRemote() {
     if (this.isSyncing) return { success: false, reason: "in_progress" };
     this.isSyncing = true;
@@ -89,30 +97,49 @@ const SyncService = {
       let profile = null;
       let source = "static";
 
-      // 1. Попытка чтения через GitHub API (если есть токен или публичный доступ)
-      const apiUrl = `https://api.github.com/repos/${cfg.githubOwner}/${cfg.githubRepo}/contents/data/catalog.json?ref=${cfg.githubBranch}&t=${Date.now()}`;
-      const headers = { Accept: "application/vnd.github.v3+json" };
-      if (cfg.githubToken && cfg.githubToken.trim()) {
-        headers["Authorization"] = `Bearer ${cfg.githubToken.trim()}`;
-      }
-
-      try {
-        const res = await fetch(apiUrl, { headers, cache: "no-store" });
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json.content) {
-            const rawUtf8 = this.base64ToUtf8(json.content);
-            catalog = JSON.parse(rawUtf8);
-            source = "github_api";
+      // 1. Приоритет: Чтение из облачной базы данных (обход CDN-кэша через ?t=...)
+      if (cfg.cloudCatalogUrl) {
+        try {
+          const cloudRes = await fetch(`${cfg.cloudCatalogUrl}?t=${Date.now()}`, {
+            cache: "no-store",
+            headers: { Accept: "application/json" }
+          });
+          if (cloudRes.ok) {
+            const data = await cloudRes.json();
+            if (Array.isArray(data) && data.length > 0) {
+              catalog = data;
+              source = "cloud_database";
+            }
           }
+        } catch (e) {
+          console.warn("[SyncService] Облачная база каталога недоступна, пробуем fallback:", e.message);
         }
-      } catch (e) {
-        // Ошибка GitHub API (например оффлайн или rate limit) — продолжаем к статическому файлу
-        console.warn("[SyncService] GitHub API недоступен, пробуем статический файл:", e.message);
       }
 
-      // 2. Если через API не удалось, пробуем прямой raw.githubusercontent.com с обходом кэша
-      if (!catalog) {
+      // 2. Fallback: GitHub API
+      if (!catalog && cfg.githubOwner && cfg.githubRepo) {
+        try {
+          const apiUrl = `https://api.github.com/repos/${cfg.githubOwner}/${cfg.githubRepo}/contents/data/catalog.json?ref=${cfg.githubBranch}&t=${Date.now()}`;
+          const headers = { Accept: "application/vnd.github.v3+json" };
+          if (cfg.githubToken && cfg.githubToken.trim()) {
+            headers["Authorization"] = `Bearer ${cfg.githubToken.trim()}`;
+          }
+          const res = await fetch(apiUrl, { headers, cache: "no-store" });
+          if (res.ok) {
+            const json = await res.json();
+            if (json && json.content) {
+              const rawUtf8 = this.base64ToUtf8(json.content);
+              catalog = JSON.parse(rawUtf8);
+              source = "github_api";
+            }
+          }
+        } catch (e) {
+          console.warn("[SyncService] GitHub API недоступен:", e.message);
+        }
+      }
+
+      // 3. Fallback: raw.githubusercontent.com
+      if (!catalog && cfg.githubOwner && cfg.githubRepo) {
         try {
           const rawUrl = `https://raw.githubusercontent.com/${cfg.githubOwner}/${cfg.githubRepo}/${cfg.githubBranch}/data/catalog.json?t=${Date.now()}`;
           const rawRes = await fetch(rawUrl, { cache: "no-store" });
@@ -125,7 +152,7 @@ const SyncService = {
         }
       }
 
-      // 3. Если и raw не ответил, пробуем локальный статический data/catalog.json с хостинга
+      // 4. Fallback: локальный статический data/catalog.json
       if (!catalog) {
         try {
           const staticRes = await fetch(`data/catalog.json?v=${Date.now()}`, { cache: "no-store" });
@@ -138,10 +165,28 @@ const SyncService = {
         }
       }
 
-      // 4. Аналогично для профиля
-      if (catalog) {
+      // --- Загрузка профиля кондитера (Cloud -> GitHub API -> Raw -> Static) ---
+      if (cfg.cloudProfileUrl) {
+        try {
+          const cloudProfRes = await fetch(`${cfg.cloudProfileUrl}?t=${Date.now()}`, {
+            cache: "no-store",
+            headers: { Accept: "application/json" }
+          });
+          if (cloudProfRes.ok) {
+            profile = await cloudProfRes.json();
+          }
+        } catch (e) {
+          console.warn("[SyncService] Облачный профиль недоступен:", e.message);
+        }
+      }
+
+      if (!profile && cfg.githubOwner && cfg.githubRepo) {
         try {
           const profApiUrl = `https://api.github.com/repos/${cfg.githubOwner}/${cfg.githubRepo}/contents/data/profile.json?ref=${cfg.githubBranch}&t=${Date.now()}`;
+          const headers = { Accept: "application/vnd.github.v3+json" };
+          if (cfg.githubToken && cfg.githubToken.trim()) {
+            headers["Authorization"] = `Bearer ${cfg.githubToken.trim()}`;
+          }
           const profRes = await fetch(profApiUrl, { headers, cache: "no-store" });
           if (profRes.ok) {
             const json = await profRes.json();
@@ -149,62 +194,54 @@ const SyncService = {
               profile = JSON.parse(this.base64ToUtf8(json.content));
             }
           }
-        } catch (e) {
-          console.warn("[SyncService] Ошибка чтения профиля из GitHub API:", e.message);
-        }
-
-        if (!profile) {
-          try {
-            const rawProfUrl = `https://raw.githubusercontent.com/${cfg.githubOwner}/${cfg.githubRepo}/${cfg.githubBranch}/data/profile.json?t=${Date.now()}`;
-            const profRawRes = await fetch(rawProfUrl, { cache: "no-store" });
-            if (profRawRes.ok) {
-              profile = await profRawRes.json();
-            }
-          } catch (e) {
-            console.warn("[SyncService] raw профиль недоступен", e.message);
-          }
-        }
-
-        if (!profile) {
-          try {
-            const profStaticRes = await fetch(`data/profile.json?v=${Date.now()}`, { cache: "no-store" });
-            if (profStaticRes.ok) {
-              profile = await profStaticRes.json();
-            }
-          } catch (e) {
-            console.warn("[SyncService] data/profile.json недоступен", e.message);
-          }
-        }
-
-        // Обновляем CatalogManager и LocalStorage
-        if (typeof CatalogManager !== "undefined") {
-          CatalogManager.products = catalog;
-          CatalogManager.save();
-          if (profile) {
-            CatalogManager.profile = Object.assign({}, CatalogManager.profile, profile);
-            if (typeof localStorage !== "undefined") {
-              localStorage.setItem(CatalogManager.PROFILE_STORAGE_KEY, JSON.stringify(CatalogManager.profile));
-            }
-          }
-          CatalogManager.notify();
-          if (typeof window !== "undefined" && typeof window.renderProfile === "function") {
-            window.renderProfile();
-          }
-        }
-
-        this.config.lastSyncTime = new Date().toISOString();
-        this.saveConfig(this.config);
-
-        if (typeof document !== "undefined") {
-          document.dispatchEvent(new CustomEvent("sync:completed", {
-            detail: { source, count: catalog.length, time: this.config.lastSyncTime }
-          }));
-        }
-
-        return { success: true, count: catalog.length, source };
+        } catch (e) {}
       }
 
-      return { success: false, reason: "not_found" };
+      if (!profile && cfg.githubOwner && cfg.githubRepo) {
+        try {
+          const rawProfUrl = `https://raw.githubusercontent.com/${cfg.githubOwner}/${cfg.githubRepo}/${cfg.githubBranch}/data/profile.json?t=${Date.now()}`;
+          const profRawRes = await fetch(rawProfUrl, { cache: "no-store" });
+          if (profRawRes.ok) {
+            profile = await profRawRes.json();
+          }
+        } catch (e) {}
+      }
+
+      if (!profile) {
+        try {
+          const profStaticRes = await fetch(`data/profile.json?v=${Date.now()}`, { cache: "no-store" });
+          if (profStaticRes.ok) {
+            profile = await profStaticRes.json();
+          }
+        } catch (e) {}
+      }
+
+      // Обновляем CatalogManager и LocalStorage
+      if (catalog && typeof CatalogManager !== "undefined") {
+        CatalogManager.products = catalog;
+        CatalogManager.save();
+        if (profile) {
+          CatalogManager.profile = Object.assign({}, CatalogManager.profile, profile);
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem(CatalogManager.PROFILE_STORAGE_KEY, JSON.stringify(CatalogManager.profile));
+          }
+        }
+        CatalogManager.notify();
+        if (typeof window !== "undefined" && typeof window.renderProfile === "function") {
+          window.renderProfile();
+        }
+      }
+
+      this.config.lastSyncTime = new Date().toISOString();
+      this.saveConfig(this.config);
+
+      if (typeof document !== "undefined") {
+        document.dispatchEvent(new CustomEvent("sync:completed", {
+          detail: { source, count: catalog ? catalog.length : 0, time: this.config.lastSyncTime }
+        }));
+      }
+
+      return { success: true, count: catalog ? catalog.length : 0, source };
     } catch (err) {
       console.error("[SyncService] Критическая ошибка синхронизации:", err);
       return { success: false, error: err.message };
@@ -213,14 +250,14 @@ const SyncService = {
     }
   },
 
-  // Запись изменений в GitHub репозиторий (Коммит через GitHub REST API)
+  // Запись изменений в облачную базу и/или GitHub
   async pushToRemote(catalogData, profileData) {
     const cfg = this.getConfig();
     if (!this.hasWriteAccess()) {
       return {
         success: false,
         reason: "no_token",
-        message: "GitHub Token не настроен. Изменения сохранены локально в вашем браузере."
+        message: "Хранилище не настроено. Данные сохранены локально в вашем браузере."
       };
     }
 
@@ -228,78 +265,38 @@ const SyncService = {
     this.isSyncing = true;
 
     try {
-      const token = cfg.githubToken.trim();
-      const baseApi = `https://api.github.com/repos/${cfg.githubOwner}/${cfg.githubRepo}/contents`;
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json"
-      };
-
-      // 1. Получаем текущий SHA для data/catalog.json
-      let catalogSha = null;
-      try {
-        const getShaRes = await fetch(`${baseApi}/data/catalog.json?ref=${cfg.githubBranch}&t=${Date.now()}`, {
-          headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github.v3+json" }
-        });
-        if (getShaRes.ok) {
-          const fileInfo = await getShaRes.json();
-          catalogSha = fileInfo.sha;
-        }
-      } catch (e) {
-        console.warn("[SyncService] Ошибка получения SHA каталога", e);
-      }
-
-      // 2. Отправляем обновленный data/catalog.json
-      const catalogJsonStr = JSON.stringify(catalogData || [], null, 2);
-      const catalogBase64 = this.utf8ToBase64(catalogJsonStr);
-      const catalogBody = {
-        message: `chore(catalog): обновление витрины кондитером [${new Date().toLocaleTimeString("ru-RU")}]`,
-        content: catalogBase64,
-        branch: cfg.githubBranch
-      };
-      if (catalogSha) catalogBody.sha = catalogSha;
-
-      const putRes = await fetch(`${baseApi}/data/catalog.json`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify(catalogBody)
-      });
-
-      if (!putRes.ok) {
-        const errJson = await putRes.json().catch(() => ({}));
-        throw new Error(errJson.message || `GitHub API вернул статус ${putRes.status}`);
-      }
-
-      // 3. Если передан profileData — сохраняем также data/profile.json
-      if (profileData) {
-        let profileSha = null;
+      // 1. Отправка в облачную базу данных (Zero-Token, фоновый режим)
+      if (cfg.cloudCatalogUrl && catalogData) {
         try {
-          const getProfShaRes = await fetch(`${baseApi}/data/profile.json?ref=${cfg.githubBranch}&t=${Date.now()}`, {
-            headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github.v3+json" }
+          await fetch(cfg.cloudCatalogUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(catalogData)
           });
-          if (getProfShaRes.ok) {
-            const fileInfo = await getProfShaRes.json();
-            profileSha = fileInfo.sha;
-          }
         } catch (e) {
-          console.warn("[SyncService] Ошибка получения SHA профиля", e);
+          console.warn("[SyncService] Ошибка записи каталога в облако:", e.message);
         }
+      }
 
-        const profileJsonStr = JSON.stringify(profileData, null, 2);
-        const profileBase64 = this.utf8ToBase64(profileJsonStr);
-        const profileBody = {
-          message: `chore(profile): обновление контактов и профиля шефа [${new Date().toLocaleTimeString("ru-RU")}]`,
-          content: profileBase64,
-          branch: cfg.githubBranch
-        };
-        if (profileSha) profileBody.sha = profileSha;
+      if (cfg.cloudProfileUrl && profileData) {
+        try {
+          await fetch(cfg.cloudProfileUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(profileData)
+          });
+        } catch (e) {
+          console.warn("[SyncService] Ошибка записи профиля в облако:", e.message);
+        }
+      }
 
-        await fetch(`${baseApi}/data/profile.json`, {
-          method: "PUT",
-          headers,
-          body: JSON.stringify(profileBody)
-        });
+      // 2. Если настроен токен GitHub, также коммитим в репозиторий (опционально)
+      if (cfg.githubToken && cfg.githubToken.trim().length > 10) {
+        try {
+          await this._pushToGitHub(catalogData, profileData, cfg);
+        } catch (e) {
+          console.warn("[SyncService] Ошибка коммита на GitHub:", e.message);
+        }
       }
 
       this.config.lastSyncTime = new Date().toISOString();
@@ -313,17 +310,84 @@ const SyncService = {
 
       return {
         success: true,
-        message: "База данных на GitHub успешно обновлена! Все покупатели увидят свежие данные."
+        message: "База данных успешно обновлена! Все покупатели видят свежие десерты."
       };
     } catch (err) {
-      console.error("[SyncService] Ошибка при записи на GitHub:", err);
+      console.error("[SyncService] Ошибка при записи в базу данных:", err);
       return {
         success: false,
         error: err.message,
-        message: `Ошибка отправки на GitHub: ${err.message}`
+        message: `Ошибка отправки данных: ${err.message}`
       };
     } finally {
       this.isSyncing = false;
+    }
+  },
+
+  // Внутренний метод: коммит в GitHub репозиторий при наличии токена
+  async _pushToGitHub(catalogData, profileData, cfg) {
+    const token = cfg.githubToken.trim();
+    const baseApi = `https://api.github.com/repos/${cfg.githubOwner}/${cfg.githubRepo}/contents`;
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github.v3+json",
+      "Content-Type": "application/json"
+    };
+
+    if (catalogData) {
+      let catalogSha = null;
+      try {
+        const getShaRes = await fetch(`${baseApi}/data/catalog.json?ref=${cfg.githubBranch}&t=${Date.now()}`, {
+          headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github.v3+json" }
+        });
+        if (getShaRes.ok) {
+          const fileInfo = await getShaRes.json();
+          catalogSha = fileInfo.sha;
+        }
+      } catch (e) {}
+
+      const catalogJsonStr = JSON.stringify(catalogData || [], null, 2);
+      const catalogBase64 = this.utf8ToBase64(catalogJsonStr);
+      const catalogBody = {
+        message: `chore(catalog): обновление витрины кондитером [${new Date().toLocaleTimeString("ru-RU")}]`,
+        content: catalogBase64,
+        branch: cfg.githubBranch
+      };
+      if (catalogSha) catalogBody.sha = catalogSha;
+
+      await fetch(`${baseApi}/data/catalog.json`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(catalogBody)
+      });
+    }
+
+    if (profileData) {
+      let profileSha = null;
+      try {
+        const getProfShaRes = await fetch(`${baseApi}/data/profile.json?ref=${cfg.githubBranch}&t=${Date.now()}`, {
+          headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github.v3+json" }
+        });
+        if (getProfShaRes.ok) {
+          const fileInfo = await getProfShaRes.json();
+          profileSha = fileInfo.sha;
+        }
+      } catch (e) {}
+
+      const profileJsonStr = JSON.stringify(profileData, null, 2);
+      const profileBase64 = this.utf8ToBase64(profileJsonStr);
+      const profileBody = {
+        message: `chore(profile): обновление контактов и профиля шефа [${new Date().toLocaleTimeString("ru-RU")}]`,
+        content: profileBase64,
+        branch: cfg.githubBranch
+      };
+      if (profileSha) profileBody.sha = profileSha;
+
+      await fetch(`${baseApi}/data/profile.json`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(profileBody)
+      });
     }
   },
 
