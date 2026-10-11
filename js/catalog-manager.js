@@ -254,8 +254,10 @@ const DEFAULT_PROFILE = {
 const CatalogManager = {
   STORAGE_KEY: "mila_sladco_custom_catalog_v2",
   PROFILE_STORAGE_KEY: "mila_sladco_profile_v2",
+  SNAPSHOT_STORAGE_KEY: "mila_sladco_published_snapshot_v2",
   products: [],
   profile: null,
+  lastPublishedSnapshot: null,
 
   init() {
     try {
@@ -281,6 +283,18 @@ const CatalogManager = {
     } catch (e) {
       console.warn("Ошибка загрузки профиля, используются дефолтные", e);
       this.profile = Object.assign({}, DEFAULT_PROFILE);
+    }
+
+    // Инициализация опубликованного слепка для точного сравнения (deep diffing)
+    try {
+      const savedSnap = typeof localStorage !== "undefined" ? localStorage.getItem(this.SNAPSHOT_STORAGE_KEY) : null;
+      if (savedSnap) {
+        this.lastPublishedSnapshot = savedSnap;
+      } else {
+        this.lastPublishedSnapshot = this.getCanonicalState();
+      }
+    } catch (e) {
+      this.lastPublishedSnapshot = this.getCanonicalState();
     }
   },
 
@@ -383,11 +397,58 @@ const CatalogManager = {
         localStorage.removeItem("mila_sladco_custom_catalog_v1");
         localStorage.removeItem(this.PROFILE_STORAGE_KEY);
         localStorage.removeItem("mila_sladco_profile_v1");
+        localStorage.removeItem(this.SNAPSHOT_STORAGE_KEY);
       }
     } catch (e) {}
+    this.lastPublishedSnapshot = this.getCanonicalState();
     this.save();
     this.notify();
     this.notifyProfile();
+  },
+
+  getCanonicalState() {
+    return JSON.stringify({
+      products: this.getProducts(),
+      profile: this.getProfile()
+    });
+  },
+
+  commitPublishedSnapshot() {
+    this.lastPublishedSnapshot = this.getCanonicalState();
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(this.SNAPSHOT_STORAGE_KEY, this.lastPublishedSnapshot);
+      }
+    } catch (e) {
+      console.warn("Ошибка сохранения опубликованного слепка", e);
+    }
+  },
+
+  hasActualChanges() {
+    if (!this.lastPublishedSnapshot) return false;
+    return this.getCanonicalState() !== this.lastPublishedSnapshot;
+  },
+
+  discardUnpublishedChanges() {
+    if (!this.lastPublishedSnapshot) return;
+    try {
+      const parsed = JSON.parse(this.lastPublishedSnapshot);
+      if (parsed && Array.isArray(parsed.products)) {
+        this.products = parsed.products;
+        this.save();
+      }
+      if (parsed && parsed.profile) {
+        this.profile = Object.assign({}, DEFAULT_PROFILE, parsed.profile);
+        try {
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem(this.PROFILE_STORAGE_KEY, JSON.stringify(this.profile));
+          }
+        } catch (e) {}
+        this.notifyProfile();
+      }
+    } catch (e) {
+      console.error("Ошибка отката изменений", e);
+    }
   },
 
   getProfile() {

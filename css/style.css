@@ -1892,17 +1892,17 @@ input[type="date"].form-input {
 /* Всплывающее окно подсказки (Popover) */
 .tooltip-popover {
   position: fixed;
-  bottom: 24px;
+  bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 20px));
   left: 50%;
   transform: translateX(-50%) translateY(20px);
   width: calc(100% - 32px);
-  max-width: 380px;
+  max-width: 420px;
   background: #FFFFFF;
   border: 1px solid var(--color-gold);
   border-radius: var(--radius-md);
-  box-shadow: 0 12px 30px rgba(44, 29, 24, 0.2);
-  padding: 16px;
-  z-index: 999;
+  box-shadow: 0 16px 40px rgba(44, 29, 24, 0.28);
+  padding: 18px 18px 16px;
+  z-index: 9999;
   opacity: 0;
   pointer-events: none;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1918,32 +1918,34 @@ input[type="date"].form-input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .tooltip-popover-title {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--color-primary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .tooltip-popover-close {
   background: none;
   border: none;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--color-muted);
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .tooltip-popover-text {
-  font-size: 13px;
-  color: var(--color-muted);
-  line-height: 1.45;
-  margin-bottom: 12px;
+  font-size: 14.5px;
+  color: #374151;
+  line-height: 1.55;
+  margin-bottom: 16px;
+  white-space: pre-line;
 }
 
 .tooltip-popover-btn {
@@ -1951,9 +1953,9 @@ input[type="date"].form-input {
   background: var(--color-primary);
   color: #FFFFFF;
   border: none;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }

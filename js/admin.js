@@ -133,9 +133,29 @@ const AdminPanel = {
   isSyncing: false,
   lastPublishedTime: null,
 
+  checkUnpublishedChanges() {
+    let hasChanges = false;
+    if (typeof CatalogManager !== "undefined" && typeof CatalogManager.hasActualChanges === "function") {
+      hasChanges = CatalogManager.hasActualChanges();
+    } else {
+      hasChanges = Boolean(this.hasUnpublishedChanges);
+    }
+    this.hasUnpublishedChanges = hasChanges;
+    if (hasChanges) {
+      this.setSyncState("pending");
+    } else {
+      this.setSyncState("synced");
+    }
+    return hasChanges;
+  },
+
   markUnpublishedChanges() {
+    if (typeof CatalogManager !== "undefined" && typeof CatalogManager.hasActualChanges === "function") {
+      return this.checkUnpublishedChanges();
+    }
     this.hasUnpublishedChanges = true;
     this.setSyncState("pending");
+    return true;
   },
 
   setSyncState(state, message) {
@@ -190,6 +210,9 @@ const AdminPanel = {
       try {
         const res = await SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
         if (res && res.success) {
+          if (typeof CatalogManager !== "undefined" && typeof CatalogManager.commitPublishedSnapshot === "function") {
+            CatalogManager.commitPublishedSnapshot();
+          }
           this.hasUnpublishedChanges = false;
           this.lastPublishedTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
           this.setSyncState("synced");
@@ -204,6 +227,9 @@ const AdminPanel = {
       } finally {
         this.isSyncing = false;
       }
+    }
+    if (typeof CatalogManager !== "undefined" && typeof CatalogManager.commitPublishedSnapshot === "function") {
+      CatalogManager.commitPublishedSnapshot();
     }
     this.hasUnpublishedChanges = false;
     this.setSyncState("synced");
@@ -221,13 +247,45 @@ const AdminPanel = {
     }
   },
 
+  // Открытие модального окна выхода с предупреждением
+  openUnsavedExitModal() {
+    const modal = document.getElementById("admin-unsaved-exit-modal");
+    if (modal) modal.classList.add("open");
+  },
+
+  closeUnsavedExitModal() {
+    const modal = document.getElementById("admin-unsaved-exit-modal");
+    if (modal) modal.classList.remove("open");
+  },
+
+  confirmDiscardAndExit() {
+    if (typeof CatalogManager !== "undefined" && typeof CatalogManager.discardUnpublishedChanges === "function") {
+      CatalogManager.discardUnpublishedChanges();
+    }
+    this.hasUnpublishedChanges = false;
+    this.setSyncState("synced");
+    this.closeUnsavedExitModal();
+    this.close(true);
+    showToast("Изменения отменены. Вы вышли из кабинета");
+  },
+
+  async publishAndExit() {
+    showToast("Публикуем изменения на сайт... 🚀");
+    const ok = await this.syncToCloud();
+    if (ok) {
+      this.closeUnsavedExitModal();
+      this.close(true);
+      showToast("🎉 Изменения опубликованы, витрина обновлена!", 4000);
+    } else {
+      showToast("Не удалось опубликовать. Проверьте интернет-соединение.", 4000);
+    }
+  },
+
   // Выход из сессии кондитера
   logout() {
-    if (this.hasUnpublishedChanges || this.isSyncing) {
-      const exitWithoutSaving = confirm("У вас есть несохраненные изменения. Хотите выйти без сохранения?");
-      if (!exitWithoutSaving) {
-        return;
-      }
+    if (this.checkUnpublishedChanges() || this.isSyncing) {
+      this.openUnsavedExitModal();
+      return;
     }
     AuthSecurity.logout();
     this.close(true);
@@ -239,7 +297,7 @@ const AdminPanel = {
     if (!modal) return;
     this.updateChefAvatarPreview();
     this.renderAdminList();
-    this.setSyncState(this.hasUnpublishedChanges ? "pending" : "synced");
+    this.checkUnpublishedChanges();
     modal.classList.add("open");
 
     // Если Люда впервые в кабинете — запускаем интерактивный тур
@@ -250,15 +308,15 @@ const AdminPanel = {
   },
 
   close(force = false) {
-    if (!force && (this.hasUnpublishedChanges || this.isSyncing)) {
-      const exitWithoutSaving = confirm("У вас есть несохраненные изменения. Хотите выйти без сохранения?");
-      if (!exitWithoutSaving) {
-        return;
-      }
+    if (!force && (this.checkUnpublishedChanges() || this.isSyncing)) {
+      this.openUnsavedExitModal();
+      return;
     }
     const modal = document.getElementById("admin-modal");
     if (modal) modal.classList.remove("open");
     this.closeEditModal();
+    this.closeContactsModal();
+    this.closeUnsavedExitModal();
     this.hideBubble();
   },
 
@@ -604,11 +662,19 @@ const AdminPanel = {
     const modal = document.getElementById("pin-recovery-modal");
     if (!modal) return;
     
-    // Очищаем поля
+    // Очищаем поля и ошибки
     for (let i = 0; i < 7; i++) {
       const input = document.getElementById(`rec-q-${i}`);
-      if (input) input.value = "";
+      if (input) {
+        input.value = "";
+        input.classList.remove("input-error");
+      }
     }
+    const titleEl = document.getElementById("pin-recovery-title");
+    const subtitleEl = document.getElementById("pin-recovery-subtitle");
+    if (titleEl) titleEl.textContent = "Восстановление доступа";
+    if (subtitleEl) subtitleEl.textContent = "Для подтверждения личности кондитера ответьте на контрольные вопросы:";
+
     const errBox = document.getElementById("recovery-error-box");
     if (errBox) {
       errBox.textContent = "";
@@ -632,6 +698,11 @@ const AdminPanel = {
   },
 
   submitRecoveryQuestions() {
+    for (let i = 0; i < 7; i++) {
+      const input = document.getElementById(`rec-q-${i}`);
+      if (input) input.classList.remove("input-error");
+    }
+
     const answers = [];
     for (let i = 0; i < 7; i++) {
       const input = document.getElementById(`rec-q-${i}`);
@@ -642,7 +713,15 @@ const AdminPanel = {
     const res = AuthSecurity.verifyAllSecurityQuestions(answers);
 
     if (res.success) {
-      if (errBox) errBox.style.display = "none";
+      if (errBox) {
+        errBox.textContent = "";
+        errBox.style.display = "none";
+      }
+      const titleEl = document.getElementById("pin-recovery-title");
+      const subtitleEl = document.getElementById("pin-recovery-subtitle");
+      if (titleEl) titleEl.textContent = "Личность подтверждена! 🎉";
+      if (subtitleEl) subtitleEl.textContent = "Ваш PIN-код успешно сброшен до 1819";
+
       const formBox = document.getElementById("recovery-questions-form");
       const successBox = document.getElementById("recovery-success-box");
       if (formBox) formBox.style.display = "none";
@@ -655,7 +734,10 @@ const AdminPanel = {
       }
       if (typeof res.failedIndex === "number") {
         const failInput = document.getElementById(`rec-q-${res.failedIndex}`);
-        if (failInput) failInput.focus();
+        if (failInput) {
+          failInput.classList.add("input-error");
+          if (typeof failInput.focus === "function") failInput.focus();
+        }
       }
     }
   },
@@ -670,12 +752,36 @@ const AdminPanel = {
     }
   },
 
+  // Вспомогательный сброс ошибок ввода
+  clearInputError(input) {
+    const el = typeof input === "string" ? document.getElementById(input) : input;
+    if (el) {
+      el.classList.remove("input-error");
+      const errEl = document.getElementById(`error-${el.id}`);
+      if (errEl) {
+        errEl.textContent = "";
+        errEl.style.display = "none";
+      }
+    }
+    const recErr = document.getElementById("recovery-error-box");
+    if (recErr && recErr.style.display !== "none") {
+      recErr.textContent = "";
+      recErr.style.display = "none";
+    }
+  },
+
   // ==========================================
   // Управление контактами и ссылками
   // ==========================================
   openContactsModal() {
     const modal = document.getElementById("contacts-modal");
     if (!modal) return;
+
+    // Сброс предыдущих ошибок
+    ["setting-phone", "setting-tg-user", "setting-max-user", "setting-tg-channel", "setting-max-channel", "setting-pickup-address"].forEach((id) => {
+      this.clearInputError(id);
+    });
+
     const profile = CatalogManager.getProfile() || {};
     const tgUser = document.getElementById("setting-tg-user");
     const tgChan = document.getElementById("setting-tg-channel");
@@ -695,7 +801,12 @@ const AdminPanel = {
     if (maxUser) maxUser.value = profile.maxUsername || "";
     if (maxChan) maxChan.value = profile.maxChannelUrl || "";
     if (pickupInput) pickupInput.value = profile.pickupAddress || "Москва, м. Раменки";
-    if (phoneInput) phoneInput.value = profile.phone || "+7 (915) 318-18-19";
+    
+    const rawPhone = profile.phone || "+7 (915) 318-18-19";
+    if (phoneInput) {
+      const formatFn = typeof formatPhoneNumber === "function" ? formatPhoneNumber : (typeof window !== "undefined" && window.formatPhoneNumber ? window.formatPhoneNumber : null);
+      phoneInput.value = formatFn ? formatFn(rawPhone) : rawPhone;
+    }
     if (showPhoneCheckbox) showPhoneCheckbox.checked = Boolean(profile.showPhone);
 
     if (showTgDirectCb) showTgDirectCb.checked = profile.showTelegramDirect !== false;
@@ -725,23 +836,95 @@ const AdminPanel = {
     const showTgChanCb = document.getElementById("setting-show-tg-channel");
     const showMaxChanCb = document.getElementById("setting-show-max-channel");
 
-    const cleanTg = (tgUser ? tgUser.value.trim() : "").replace(/^@/, "");
-    const tgChannel = tgChan ? tgChan.value.trim() : "";
-    let maxLogin = (maxUser ? maxUser.value.trim() : "").replace(/^@/, "");
+    // Сброс предыдущих ошибок
+    ["setting-phone", "setting-tg-user", "setting-max-user", "setting-tg-channel", "setting-max-channel", "setting-pickup-address"].forEach((id) => {
+      this.clearInputError(id);
+    });
+
+    const cleanTg = (tgUser && tgUser.value ? String(tgUser.value).trim() : "").replace(/^@/, "");
+    const tgChannel = (tgChan && tgChan.value) ? String(tgChan.value).trim() : "";
+    let maxLogin = (maxUser && maxUser.value ? String(maxUser.value).trim() : "").replace(/^@/, "");
     const maxUrlMatch = maxLogin.match(/https?:\/\/[^\s]+/i);
     if (maxUrlMatch) {
       maxLogin = maxUrlMatch[0];
     }
-    const maxChannel = maxChan ? maxChan.value.trim() : "";
-    const pickupVal = (pickupInput && pickupInput.value.trim()) ? pickupInput.value.trim() : "Москва, м. Раменки";
-    const phoneVal = phoneInput ? phoneInput.value.trim() : "+7 (915) 318-18-19";
-    const cleanDigits = phoneVal.replace(/[^\d+]/g, "");
-    const showPhone = showPhoneCheckbox ? showPhoneCheckbox.checked : false;
+    const maxChannel = (maxChan && maxChan.value) ? String(maxChan.value).trim() : "";
+    const pickupVal = (pickupInput && pickupInput.value) ? String(pickupInput.value).trim() : "";
+    const phoneVal = (phoneInput && phoneInput.value) ? String(phoneInput.value).trim() : "";
+    const showPhone = showPhoneCheckbox ? Boolean(showPhoneCheckbox.checked) : false;
 
-    const showTgDirect = showTgDirectCb ? showTgDirectCb.checked : true;
-    const showMaxDirect = showMaxDirectCb ? showMaxDirectCb.checked : true;
-    const showTgChannel = showTgChanCb ? showTgChanCb.checked : true;
+    const showTgDirect = showTgDirectCb ? showTgDirectCb.checked : false;
+    const showMaxDirect = showMaxDirectCb ? showMaxDirectCb.checked : false;
+    const showTgChannel = showTgChanCb ? showTgChanCb.checked : false;
     const showMaxChannel = showMaxChanCb ? showMaxChanCb.checked : false;
+
+    const errors = [];
+    let firstInvalidField = null;
+
+    const markError = (id, msg) => {
+      const el = document.getElementById(id);
+      const errEl = document.getElementById(`error-${id}`);
+      if (el) el.classList.add("input-error");
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.style.display = "block";
+      }
+      if (!firstInvalidField && el) firstInvalidField = el;
+      errors.push(msg);
+    };
+
+    // Валидатор телефона
+    const validatePhoneFn = typeof validatePhoneNumber === "function" ? validatePhoneNumber : (typeof window !== "undefined" && window.validatePhoneNumber ? window.validatePhoneNumber : (p) => p.replace(/\D/g, "").length === 11);
+
+    if (showPhone && !phoneVal) {
+      markError("setting-phone", "Укажите рабочий телефон для приёма звонков");
+    } else if (phoneVal && !validatePhoneFn(phoneVal)) {
+      markError("setting-phone", "Укажите корректный номер телефона (11 цифр)");
+    }
+
+    if (showTgDirect) {
+      if (!cleanTg) {
+        markError("setting-tg-user", "Укажите ник Telegram для связи");
+      } else if (/\s/.test(cleanTg) || cleanTg.includes("/")) {
+        markError("setting-tg-user", "Ник Telegram не должен содержать пробелов или слэшей");
+      }
+    }
+
+    if (showMaxDirect) {
+      if (!maxLogin) {
+        markError("setting-max-user", "Укажите ссылку-приглашение из приложения MAX");
+      } else if (!maxLogin.includes("max.ru") && !maxLogin.startsWith("+") && maxLogin.length < 3) {
+        markError("setting-max-user", "Вставьте ссылку вида https://max.ru/u/... или контакт");
+      }
+    }
+
+    if (showTgChannel) {
+      if (!tgChannel) {
+        markError("setting-tg-channel", "Укажите ссылку на Telegram-канал");
+      } else if (!tgChannel.startsWith("http") && !tgChannel.startsWith("t.me") && !tgChannel.startsWith("@")) {
+        markError("setting-tg-channel", "Ссылка должна начинаться с https://t.me/ или @");
+      }
+    }
+
+    if (showMaxChannel) {
+      if (!maxChannel) {
+        markError("setting-max-channel", "Укажите ссылку на MAX-канал");
+      } else if (!maxChannel.startsWith("http")) {
+        markError("setting-max-channel", "Укажите корректную ссылку на канал (https://...)");
+      }
+    }
+
+    if (!pickupVal || pickupVal.length < 5) {
+      markError("setting-pickup-address", "Укажите точный адрес для самовывоза (минимум 5 символов)");
+    }
+
+    if (errors.length > 0) {
+      if (firstInvalidField && typeof firstInvalidField.focus === "function") firstInvalidField.focus();
+      showToast("Пожалуйста, исправьте ошибки в настройках контактов ⚠️", 3500);
+      return false;
+    }
+
+    const cleanDigits = phoneVal.replace(/[^\d+]/g, "");
 
     CatalogManager.updateProfile({
       telegramUsername: cleanTg,
@@ -764,6 +947,7 @@ const AdminPanel = {
     }
     showToast("Контакты и настройки ссылок обновлены! 📱✨");
     this.markUnpublishedChanges();
+    return true;
   },
 
   // ==========================================
@@ -880,7 +1064,35 @@ const AdminPanel = {
       },
       contacts: {
         title: "📱 Контакты и мессенджеры",
-        text: "Здесь вы можете изменить логин Telegram, канал, логин MAX Messenger, телефон, а также включить или выключить показ номера телефона на сайте для защиты от спам-ботов."
+        text: "Здесь вы можете настроить логины Telegram и MAX, ссылки на каналы, телефон и адрес для самовывоза."
+      },
+      tg_user: {
+        title: "✈️ Личный Telegram для заказов",
+        text: "Укажите ваш логин (username) в Telegram без знака @, например: mila_sladco.\n\nКлиент нажмёт кнопку «Написать в Telegram» на сайте и сразу перейдёт в личный диалог с вами для отправки заказа или вопроса."
+      },
+      max_user: {
+        title: "💬 Ссылка на диалог в MAX",
+        text: "Где скопировать вашу персональную ссылку в MAX:\n\n📱 В мобильном приложении: откройте «Настройки» (шестерёнка) ➔ «Пригласить друзей» ➔ «Скопировать ссылку».\n\n💻 В приложении на компьютере: откройте профиль / настройки ➔ нажмите «Скопировать ссылку».\n\nСсылка имеет вид https://max.ru/u/... — вставьте её сюда целиком. По ней клиенты сразу попадают в личный диалог с вами."
+      },
+      pickup_address: {
+        title: "📍 Адрес для самовывоза",
+        text: "Укажите точный адрес или ориентир (город, улица, дом, метро), где клиенты могут забрать готовый заказ.\n\nЭтот адрес автоматически появится в корзине при выборе самовывоза и попадёт в готовый чек заказа."
+      },
+      tg_channel: {
+        title: "📢 Telegram-канал",
+        text: "Ссылка на ваш канал в Telegram с новостями, фото новинок и анонсами кондитерской (например: https://t.me/mila_sladco1 или ссылка-приглашение)."
+      },
+      max_channel: {
+        title: "📢 Канал в MAX Messenger",
+        text: "Ссылка-приглашение на ваш канал в мессенджере MAX (имеет вид https://max.ru/join/...).\n\nКлиенты смогут подписаться на новости прямо из визитки сайта."
+      },
+      phone: {
+        title: "📞 Рабочий номер телефона",
+        text: "Рабочий контактный номер кондитерской для связи с клиентами.\n\n💡 Рекомендация: используйте отдельный рабочий номер для заказов, а не личный семейный номер."
+      },
+      phone_protect: {
+        title: "🛡️ Защита номера от ботов и спама",
+        text: "Встроенный анти-бот фильтр:\n\nНомер скрыт от автоматических роботов, парсеров и автодозвонщиков. Чтобы позвонить, гость нажимает кнопку и проходит быстрый человеческий тест (выбрать десерт среди картинок)."
       }
     };
 

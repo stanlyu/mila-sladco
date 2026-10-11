@@ -16,7 +16,8 @@ function getMockElement(id) {
       },
       textContent: "",
       disabled: false,
-      style: {}
+      style: {},
+      focus() { this.isFocused = true; }
     };
   }
   return mockElements[id];
@@ -37,10 +38,13 @@ global.AuthSecurity = {
   logout() { this.isAuth = false; }
 };
 
-// Мокаем CatalogManager
+let mockChanged = false;
 global.CatalogManager = {
   getProducts() { return [{ id: "1", title: "Торт" }]; },
-  getProfile() { return { owner: "Люда" }; }
+  getProfile() { return { owner: "Люда" }; },
+  hasActualChanges() { return mockChanged; },
+  commitPublishedSnapshot() { mockChanged = false; },
+  discardUnpublishedChanges() { mockChanged = false; }
 };
 
 // Мокаем SyncService
@@ -53,6 +57,7 @@ global.SyncService = {
 const { AdminPanel } = require("../js/admin.js");
 
 test("AdminPanel: markUnpublishedChanges фиксирует изменения и обновляет плашку", () => {
+  mockChanged = true;
   AdminPanel.hasUnpublishedChanges = false;
   AdminPanel.markUnpublishedChanges();
 
@@ -63,40 +68,46 @@ test("AdminPanel: markUnpublishedChanges фиксирует изменения �
   assert.strictEqual(barEl.classList.contains("has-pending"), true);
 });
 
-test("AdminPanel: при попытке выхода с несохраненными изменениями запрашивается подтверждение (Отмена оставляет окно открытым)", () => {
+test("AdminPanel: при выходе с несохраненными изменениями открывается кастомное модальное окно (без нативных confirm)", () => {
+  mockChanged = true;
   AdminPanel.hasUnpublishedChanges = true;
-  let confirmAsked = false;
-  global.confirm = (msg) => {
-    confirmAsked = true;
-    assert.strictEqual(msg, "У вас есть несохраненные изменения. Хотите выйти без сохранения?");
-    return false; // Нажимаем «Отмена»
-  };
 
-  const modal = getMockElement("admin-modal");
-  modal.classList.add("open");
+  const adminModal = getMockElement("admin-modal");
+  adminModal.classList.add("open");
+  const exitModal = getMockElement("admin-unsaved-exit-modal");
+  exitModal.classList.remove("open");
 
   AdminPanel.close();
-  assert.strictEqual(confirmAsked, true);
-  assert.strictEqual(modal.classList.contains("open"), true); // Окно НЕ закрылось
+
+  // Окно предупреждения открылось, а админка осталась открытой
+  assert.strictEqual(exitModal.classList.contains("open"), true);
+  assert.strictEqual(adminModal.classList.contains("open"), true);
+
+  // Пользователь нажал «Остаться в кабинете»
+  AdminPanel.closeUnsavedExitModal();
+  assert.strictEqual(exitModal.classList.contains("open"), false);
+  assert.strictEqual(adminModal.classList.contains("open"), true);
 });
 
-test("AdminPanel: при подтверждении «Да» окно закрывается без сохранения", () => {
+test("AdminPanel: подтверждение выхода без сохранения сбрасывает изменения и закрывает админку", () => {
+  mockChanged = true;
   AdminPanel.hasUnpublishedChanges = true;
-  let confirmAsked = false;
-  global.confirm = () => {
-    confirmAsked = true;
-    return true; // Нажимаем «Да»
-  };
 
-  const modal = getMockElement("admin-modal");
-  modal.classList.add("open");
+  const adminModal = getMockElement("admin-modal");
+  adminModal.classList.add("open");
+  const exitModal = getMockElement("admin-unsaved-exit-modal");
+  exitModal.classList.add("open");
 
-  AdminPanel.close();
-  assert.strictEqual(confirmAsked, true);
-  assert.strictEqual(modal.classList.contains("open"), false); // Окно закрылось
+  AdminPanel.confirmDiscardAndExit();
+
+  assert.strictEqual(mockChanged, false);
+  assert.strictEqual(AdminPanel.hasUnpublishedChanges, false);
+  assert.strictEqual(exitModal.classList.contains("open"), false);
+  assert.strictEqual(adminModal.classList.contains("open"), false);
 });
 
 test("AdminPanel: ручная публикация сбрасывает флаг несохраненных изменений", async () => {
+  mockChanged = true;
   AdminPanel.hasUnpublishedChanges = true;
   await AdminPanel.manualPublish();
 
@@ -107,18 +118,53 @@ test("AdminPanel: ручная публикация сбрасывает фла�
   assert.strictEqual(barEl.classList.contains("has-pending"), false);
 });
 
-test("AdminPanel: если все сохранено/опубликовано, выход происходит без алертов", () => {
+test("AdminPanel: если все сохранено/опубликовано, выход происходит без открытия окна подтверждения", () => {
+  mockChanged = false;
   AdminPanel.hasUnpublishedChanges = false;
-  let confirmCalled = false;
-  global.confirm = () => {
-    confirmCalled = true;
-    return false;
-  };
 
-  const modal = getMockElement("admin-modal");
-  modal.classList.add("open");
+  const adminModal = getMockElement("admin-modal");
+  adminModal.classList.add("open");
+  const exitModal = getMockElement("admin-unsaved-exit-modal");
+  exitModal.classList.remove("open");
 
   AdminPanel.close();
-  assert.strictEqual(confirmCalled, false); // Алерт НЕ вызывался
-  assert.strictEqual(modal.classList.contains("open"), false); // Окно закрылось штатно
+  assert.strictEqual(exitModal.classList.contains("open"), false);
+  assert.strictEqual(adminModal.classList.contains("open"), false); // Окно закрылось штатно
+});
+
+test("AdminPanel: saveContacts валидирует телефон и адрес, подсвечивает ошибки и предотвращает некорректное сохранение", () => {
+  let profileSaved = null;
+  global.CatalogManager.updateProfile = (patch) => {
+    profileSaved = patch;
+  };
+  global.validatePhoneNumber = (p) => p.replace(/\D/g, "").length === 11;
+
+  // Ошибка 1: короткий адрес самовывоза
+  getMockElement("setting-pickup-address").value = "Мск";
+  getMockElement("setting-phone").value = "+7 (915) 318-18-19";
+  getMockElement("setting-show-phone").checked = true;
+  getMockElement("setting-show-tg-direct").checked = false;
+  getMockElement("setting-show-max-direct").checked = false;
+
+  const result1 = AdminPanel.saveContacts();
+  assert.strictEqual(result1, false);
+  assert.strictEqual(getMockElement("setting-pickup-address").classList.contains("input-error"), true);
+  assert.strictEqual(getMockElement("error-setting-pickup-address").textContent.includes("минимум 5 символов"), true);
+
+  // Ошибка 2: некорректный телефон при включённых звонках
+  getMockElement("setting-pickup-address").value = "Москва, м. Раменки";
+  getMockElement("setting-phone").value = "12345";
+  const result2 = AdminPanel.saveContacts();
+  assert.strictEqual(result2, false);
+  assert.strictEqual(getMockElement("setting-phone").classList.contains("input-error"), true);
+
+  // Успех: корректные данные
+  getMockElement("setting-phone").value = "+7 (915) 318-18-19";
+  getMockElement("setting-show-tg-direct").checked = true;
+  getMockElement("setting-tg-user").value = "mila_sladco";
+  const result3 = AdminPanel.saveContacts();
+  assert.strictEqual(result3, true);
+  assert.strictEqual(getMockElement("setting-phone").classList.contains("input-error"), false);
+  assert.strictEqual(getMockElement("setting-pickup-address").classList.contains("input-error"), false);
+  assert.strictEqual(profileSaved.telegramUsername, "mila_sladco");
 });

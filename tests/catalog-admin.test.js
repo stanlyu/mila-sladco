@@ -188,3 +188,31 @@ test("CatalogManager: обновление контактов, мессендж�
   assert.strictEqual(CatalogManager.getProfile().showMaxChannel, false);
 });
 
+test("CatalogManager: deep diffing (hasActualChanges) точно отслеживает изменения без ложных срабатываний", () => {
+  CatalogManager.resetToDefaults();
+  assert.strictEqual(CatalogManager.hasActualChanges(), false);
+
+  // Изменение наличия
+  CatalogManager.toggleAvailability("mango-passion");
+  assert.strictEqual(CatalogManager.hasActualChanges(), true);
+
+  // Возврат наличия назад полностью устраняет разницу
+  CatalogManager.toggleAvailability("mango-passion");
+  assert.strictEqual(CatalogManager.hasActualChanges(), false);
+
+  // Изменение цены
+  CatalogManager.updateProduct("mango-passion", { price: 600 });
+  assert.strictEqual(CatalogManager.hasActualChanges(), true);
+
+  // Возврат цены к исходной
+  CatalogManager.updateProduct("mango-passion", { price: 450 });
+  assert.strictEqual(CatalogManager.hasActualChanges(), false);
+
+  // Откат изменений через discardUnpublishedChanges
+  CatalogManager.updateProduct("mango-passion", { price: 999 });
+  assert.strictEqual(CatalogManager.hasActualChanges(), true);
+  CatalogManager.discardUnpublishedChanges();
+  assert.strictEqual(CatalogManager.hasActualChanges(), false);
+  assert.strictEqual(CatalogManager.getProductById("mango-passion").price, 450);
+});
+
