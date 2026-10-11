@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Памятка для Люды — Витрина кондитерской Mila_sladco</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #FAF7F2;
+      --bg-card: #FFFFFF;
+      --color-primary: #38251F;
+      --color-gold: #C59A47;
+      --color-rose: #E88B97;
+      --color-rose-bg: #FFF3F5;
+      --color-muted: #7E6F67;
+      --border-color: #EFE8DF;
+      --shadow-sm: 0 4px 16px rgba(56, 37, 31, 0.06);
+      --shadow-md: 0 8px 24px rgba(56, 37, 31, 0.1);
+      --radius-sm: 14px;
+      --radius-md: 22px;
+      --radius-full: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--color-primary);
+      line-height: 1.55;
+      padding: 20px 16px 60px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .header-card {
+      background: linear-gradient(135deg, #FFF9FA 0%, #FFFFFF 100%);
+      border: 1px solid #FCE4E8;
+      border-radius: var(--radius-md);
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .badge-top {
+      display: inline-block;
+      background: var(--color-rose-bg);
+      color: #D6336C;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      margin-bottom: 12px;
+      border: 1px solid #FFD8E0;
+    }
+
+    .title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--color-muted);
+    }
+
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .step-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      background: var(--color-primary);
+      color: #FFFFFF;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-content h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .step-content p {
+      font-size: 13px;
+      color: #55443D;
+      line-height: 1.45;
+    }
+
+    .tip-box {
+      background: #FDF9F2;
+      border-left: 4px solid var(--color-gold);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #614D3C;
+      margin-top: 14px;
+      line-height: 1.45;
+    }
+
+    .alert-box {
+      background: #FFF5F5;
+      border: 1px solid #FFE3E3;
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #C92A2A;
+      margin-top: 12px;
+      line-height: 1.4;
+    }
+
+    .btn-action {
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, #38251F 0%, #523A32 100%);
+      color: #FFFFFF;
+      text-decoration: none;
+      text-align: center;
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 15px;
+      margin-top: 16px;
+      box-shadow: 0 4px 14px rgba(56, 37, 31, 0.2);
+    }
+
+    .code-pill {
+      background: #EFE9E0;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-weight: 700;
+      color: #2C1D18;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Заголовок -->
+  <header class="header-card">
+    <div class="badge-top">Шпаргалка для кондитера Люды</div>
+    <h1 class="title">Сайт-витрина Mila_sladco 🍰</h1>
+    <p class="subtitle">Как пользоваться сайтом, менять цены и принимать готовые заказы</p>
+  </header>
+
+  <!-- Блок 1: Зачем нужен сайт -->
+  <section class="section-card">
+    <h2 class="section-title"><span>✨</span> Зачем тебе этот сайт?</h2>
+    <p style="font-size: 13px; color: #55443D; margin-bottom: 12px;">
+      Больше не нужно каждому клиенту в переписке скидывать фото, считать цены и спрашивать адрес.
+    </p>
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Клиент переходит по ссылке</h4>
+        <p>Из Инстаграма, Телеграм-канала или мессенджера MAX прямо в твой каталог.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Выбирает десерты</h4>
+        <p>Смотрит красивые фотографии, читает состав и нажимает «В корзину».</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Тебе приходит готовый чек!</h4>
+        <p>В MAX или Telegram падает сообщение со списком пирожных, датой, телефоном и адресом. Тебе остается только подтвердить и скинуть номер карты для оплаты.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Блок 2: Секретный вход -->
+  <section class="section-card" style="border-color: #F8D7DA;">
+    <h2 class="section-title"><span>🔐</span> Секретный вход в кабинет</h2>
+    <p style="font-size: 13px; color: #55443D; margin-bottom: 12px;">
+      Обычные покупатели <b>не видят</b> никаких кнопок настройки. Вход скрыт только для тебя:
+    </p>
+
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Нажми 3 раза на свою фотографию</h4>
+        <p>В самом верху сайта быстро нажми 3 раза пальцем по круглому фото кондитера.</p>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Введи секретный PIN-код</h4>
+        <p>Появится замочек. Твой код: <span class="code-pill">1819</span> (последние 4 цифры твоего телефона).</p>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      🔒 <b>Защита от чужих</b>: если кто-то чужой попробует ввести код наугад 3 раза подряд, сайт заблокирует ввод на 5 минут.
+    </div>
+  </section>
+
+  <!-- Блок 3: Как менять цены и фото -->
+  <section class="section-card">
+    <h2 class="section-title"><span>📱</span> Управление прямо со смартфона</h2>
+
+    <div class="step-item">
+      <div class="step-num">✦</div>
+      <div class="step-content">
+        <h4>Поменять цену десерта</h4>
+        <p>Нажми на цифру цены прямо в кабинете, сотри и напиши новую (например, 490 вместо 450). Цена на сайте обновится сразу!</p>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">✦</div>
+      <div class="step-content">
+        <h4>Скрыть десерт («Закончился»)</h4>
+        <p>Если сегодня всё раскупили, нажми зеленую кнопку «✅ В наличии» — она станет «❌ Закончился». Клиенты увидят, что десерта пока нет, и не смогут его заказать.</p>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">✦</div>
+      <div class="step-content">
+        <h4>Поставить свое фото</h4>
+        <p>Нажми «✏️ Изменить» ➔ «📸 Выбрать фото» и выбери любой снимок из галереи телефона.</p>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">✦</div>
+      <div class="step-content">
+        <h4>Добавить новый торт</h4>
+        <p>Нажми кнопку «+ Добавить десерт», загрузи фото, укажи название и цену.</p>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">✦</div>
+      <div class="step-content">
+        <h4>Выйти из кабинета</h4>
+        <p>Когда всё настроила, нажми «🔒 Выйти» вверху кабинета.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Блок 4: Про свой домен -->
+  <section class="section-card">
+    <h2 class="section-title"><span>🌐</span> Зачем нужен свой адрес .ru?</h2>
+    <p style="font-size: 13px; color: #55443D; line-height: 1.5; margin-bottom: 10px;">
+      Сейчас сайт работает временно, но для постоянной работы нужен адрес <b>mila-sladco.ru</b>.
+    </p>
+
+    <div class="alert-box" style="color: #2B8A3E; background: #EBFBEE; border-color: #D3F9D8;">
+      ✔ <b>Работает у всех в России без VPN</b>: зарубежные сервисы часто блокируются у клиентов на мобильном интернете, а домен .ru открывается мгновенно у 100% людей.
+    </div>
+
+    <p style="font-size: 13px; color: #55443D; margin-top: 10px;">
+      Стоит домен всего <b>199 рублей в год</b>. Стас поможет его зарегистрировать и привязать за 2 минуты!
+    </p>
+  </section>
+
+  <!-- Кнопка перехода на сайт -->
+  <a href="index.html" class="btn-action">🍰 Открыть витрину Mila_sladco</a>
+
+  <p style="text-align: center; font-size: 12px; color: var(--color-muted); margin-top: 20px;">
+    Mila_sladco • Создано с заботой о любимом деле
+  </p>
+
+</body>
+</html>

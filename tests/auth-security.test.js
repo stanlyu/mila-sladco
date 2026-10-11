@@ -31,11 +31,11 @@ test("AuthSecurity: по умолчанию не авторизован", () => 
   assert.strictEqual(AuthSecurity.isAuthenticated(), false);
 });
 
-test("AuthSecurity: успешная авторизация по стандартному PIN-коду (1414)", () => {
+test("AuthSecurity: успешная авторизация по стандартному PIN-коду (1819)", () => {
   AuthSecurity.init();
   AuthSecurity.logout();
 
-  const result = AuthSecurity.verifyPin("1414");
+  const result = AuthSecurity.verifyPin("1819");
   assert.strictEqual(result.success, true);
   assert.strictEqual(AuthSecurity.isAuthenticated(), true);
 });
@@ -63,7 +63,7 @@ test("AuthSecurity: блокировка после 3 неверных попы�
   assert.ok(thirdTry.lockTimeRemaining > 0);
 
   // Даже правильный PIN заблокирован во время локдауна
-  const lockedAttempt = AuthSecurity.verifyPin("1414");
+  const lockedAttempt = AuthSecurity.verifyPin("1819");
   assert.strictEqual(lockedAttempt.success, false);
   assert.strictEqual(lockedAttempt.isLocked, true);
 });
@@ -71,15 +71,15 @@ test("AuthSecurity: блокировка после 3 неверных попы�
 test("AuthSecurity: кондитер может сменить PIN-код на свой", () => {
   AuthSecurity.init();
   AuthSecurity.resetLock(); // сброс лока для теста
-  AuthSecurity.verifyPin("1414");
+  AuthSecurity.verifyPin("1819");
 
-  const changeResult = AuthSecurity.changePin("1414", "9876");
+  const changeResult = AuthSecurity.changePin("1819", "9876");
   assert.strictEqual(changeResult.success, true);
 
   AuthSecurity.logout();
 
   // Старый PIN больше не подходит
-  assert.strictEqual(AuthSecurity.verifyPin("1414").success, false);
+  assert.strictEqual(AuthSecurity.verifyPin("1819").success, false);
 
   // Новый PIN успешно авторизует
   assert.strictEqual(AuthSecurity.verifyPin("9876").success, true);

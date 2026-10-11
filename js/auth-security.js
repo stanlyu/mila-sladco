@@ -20,8 +20,8 @@ function hashPin(pin) {
   return String(Math.abs(hash));
 }
 
-// Стандартный PIN Люды: 1414 (последние цифры телефона)
-const DEFAULT_PIN_HASH = hashPin("1414");
+// Стандартный PIN Люды: 1819 (последние цифры телефона)
+const DEFAULT_PIN_HASH = hashPin("1819");
 
 const AuthSecurity = {
   SESSION_KEY: "mila_sladco_auth_session",
