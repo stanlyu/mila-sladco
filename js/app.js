@@ -346,6 +346,36 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Надежное копирование текста в буфер обмена для всех мобильных браузеров (включая iOS Safari)
+  function copyTextToClipboard(text) {
+    if (!text) return false;
+    let copied = false;
+    if (typeof document !== "undefined") {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.top = "0";
+        ta.style.left = "-9999px";
+        ta.style.opacity = "0";
+        ta.setAttribute("readonly", "");
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, 99999);
+        copied = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (e) {
+        console.warn("execCommand copy error:", e);
+      }
+    }
+    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    return copied;
+  }
+  window.copyTextToClipboard = copyTextToClipboard;
+
   // Отправка заказа
   window.submitOrder = () => {
     try {
@@ -424,20 +454,28 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       window.copyOrderTextAgain = () => {
-        if (currentOrderText && navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(currentOrderText)
-            .then(() => showToast("Чек заказа скопирован в буфер обмена! 📋"))
-            .catch(() => showToast("Чек скопирован! 📋"));
+        if (currentOrderText) {
+          copyTextToClipboard(currentOrderText);
+          showToast("Чек заказа скопирован в буфер обмена! 📋", 3500);
         } else {
-          showToast("Чек заказа скопирован! 📋");
+          showToast("Чек заказа скопирован! 📋", 3000);
         }
       };
 
-      window.retryOpenMessenger = () => {
+      window.proceedToMessenger = () => {
+        if (currentOrderText) {
+          copyTextToClipboard(currentOrderText);
+        }
         if (currentMessengerUrl) {
-          window.open(currentMessengerUrl, "_blank");
+          try {
+            window.open(currentMessengerUrl, "_blank");
+          } catch (e) {
+            window.location.href = currentMessengerUrl;
+          }
         }
       };
+
+      window.retryOpenMessenger = window.proceedToMessenger;
 
       window.backToOrderEdit = () => {
         const mainFlow = document.getElementById("cart-main-flow");
@@ -459,6 +497,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const targetUser = selectedMessenger === "telegram" ? cleanTg : cleanMax;
 
       if (!targetUser || targetUser === "none") {
+        copyTextToClipboard(orderText);
         showToast("💡 Чек скопирован в буфер! Для автоматической отправки укажите свой логин в Кабинете кондитера → «Контакты & ссылки».", 4500);
         // Показываем экран подтверждения, чтобы гость мог скопировать чек
         const mainFlow = document.getElementById("cart-main-flow");
@@ -486,10 +525,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       currentMessengerUrl = messengerUrl;
 
-      // Автоматически копируем чек в буфер обмена
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(orderText).catch(() => {});
-      }
+      // Надежно синхронно копируем чек в буфер обмена перед открытием окна
+      copyTextToClipboard(orderText);
 
       try {
         window.open(messengerUrl, "_blank");
@@ -500,17 +537,45 @@ document.addEventListener("DOMContentLoaded", () => {
       // Переключаем на экран подтверждения (корзина сохраняется, пока гость не нажмет «Заказ отправлен»)
       const mainFlow = document.getElementById("cart-main-flow");
       const successScreen = document.getElementById("order-success-screen");
+      const msgTitle = document.getElementById("order-success-title");
       const msgHint = document.getElementById("order-success-msg");
+      const proceedBtn = document.getElementById("btn-proceed-messenger");
+      const helpBox = document.getElementById("order-success-help");
+      const iconEl = document.getElementById("order-success-icon");
+
       if (mainFlow) mainFlow.style.display = "none";
       if (successScreen) successScreen.style.display = "block";
-      if (msgHint) {
-        if (selectedMessenger === "telegram") {
-          msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>Telegram</b>.<br />Нажмите <b>«Отправить»</b> в открывшемся чате.`;
-        } else {
-          msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>MAX</b>.<br />Чек скопирован в буфер обмена: просто <b>вставьте</b> его в поле сообщения и нажмите <b>«Отправить»</b>.`;
+
+      if (selectedMessenger === "telegram") {
+        if (iconEl) iconEl.textContent = "💌";
+        if (msgTitle) msgTitle.textContent = "Заказ готов к отправке!";
+        if (msgHint) {
+          msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>Telegram</b>.<br />Нажмите <b>«Отправить»</b> в чате с кондитером.`;
         }
+        if (proceedBtn) {
+          proceedBtn.innerHTML = `✈️ Открыть диалог в Telegram`;
+        }
+        if (helpBox) {
+          helpBox.innerHTML = `<b>💡 Если чат не открылся:</b><br />Нажмите кнопку «Открыть диалог в Telegram» выше или скопируйте чек кнопкой ниже.`;
+        }
+        showToast("Заказ сформирован! Переходим в Telegram 💌", 3500);
+      } else {
+        if (iconEl) iconEl.textContent = "📋";
+        if (msgTitle) msgTitle.textContent = "Чек скопирован в буфер обмена!";
+        if (msgHint) {
+          msgHint.innerHTML = `Мы сформировали ваш заказ и скопировали чек в буфер обмена устройства.`;
+        }
+        if (proceedBtn) {
+          proceedBtn.innerHTML = `💬 Перейти в диалог MAX и вставить чек`;
+        }
+        if (helpBox) {
+          helpBox.innerHTML = `<b>💡 Как отправить чек в MAX:</b><br />
+1. Нажмите кнопку выше <b>«Перейти в диалог MAX»</b>.<br />
+2. В открывшемся чате нажмите и удерживайте строку ввода сообщения.<br />
+3. Выберите <b>«Вставить»</b> и нажмите стрелочку <b>«Отправить»</b>.`;
+        }
+        showToast("Чек скопирован в буфер! Вставьте в MAX 📋", 4000);
       }
-      showToast("Заказ сформирован! Чек открыт в чате 💌", 3500);
     } catch (err) {
       console.error("Ошибка при оформлении заказа:", err);
       showToast("Произошла ошибка при отправке заказа. Попробуйте еще раз.", 4000);
@@ -678,16 +743,19 @@ document.addEventListener("DOMContentLoaded", () => {
           e.preventDefault();
           PhoneProtection.showModal();
         };
+        if (phoneSub) {
+          phoneSub.textContent = "Нажмите для звонка (защита от спама)";
+        }
       } else {
         // Защита отключена кондитером: прямой tel:
         phoneBtn.onclick = null;
         if (profile.phoneClean || profile.phone) {
           phoneBtn.href = `tel:${profile.phoneClean || profile.phone}`;
         }
+        if (phoneSub) {
+          phoneSub.textContent = profile.phone ? `Прямой звонок: ${profile.phone}` : "Позвонить кондитеру";
+        }
       }
-    }
-    if (phoneSub && profile.phone) {
-      phoneSub.textContent = `Если праздник уже сегодня: ${profile.phone}`;
     }
 
     // Подсказка адреса самовывоза в корзине
@@ -703,7 +771,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Защита номера телефона шефа от автоматических спам-ботов
   const PhoneProtection = {
-    isVerified: false,
+    // Пул вариантов для капчи (без десертов)
+    captchaPool: [
+      { icon: "🚗", label: "Машина", correct: false },
+      { icon: "🐶", label: "Щенок", correct: false },
+      { icon: "⚽", label: "Мяч", correct: false },
+      { icon: "✈️", label: "Самолёт", correct: false },
+      { icon: "🚲", label: "Велосипед", correct: false },
+      { icon: "🐱", label: "Котёнок", correct: false },
+      { icon: "🎸", label: "Гитара", correct: false },
+      { icon: "🚀", label: "Ракета", correct: false }
+    ],
+
+    // Десерты (правильные ответы)
+    dessertPool: [
+      { icon: "🍰", label: "Десерт", correct: true },
+      { icon: "🧁", label: "Капкейк", correct: true },
+      { icon: "🎂", label: "Торт", correct: true },
+      { icon: "🍩", label: "Пончик", correct: true }
+    ],
+
+    renderCaptcha() {
+      const grid = document.getElementById("phone-protect-captcha-grid") || document.querySelector(".captcha-grid");
+      if (!grid) return;
+
+      const randomDessert = this.dessertPool[Math.floor(Math.random() * this.dessertPool.length)];
+      const shuffledDecoys = [...this.captchaPool].sort(() => Math.random() - 0.5).slice(0, 3);
+      const items = [randomDessert, ...shuffledDecoys].sort(() => Math.random() - 0.5);
+
+      grid.innerHTML = items.map(item => `
+        <button type="button" class="captcha-btn" onclick="PhoneProtection.chooseOption(${item.correct})">
+          <span class="captcha-icon">${item.icon}</span>
+          <span class="captcha-label">${item.label}</span>
+        </button>
+      `).join("");
+    },
 
     showModal() {
       const modal = document.getElementById("phone-protect-modal");
@@ -726,33 +828,33 @@ document.addEventListener("DOMContentLoaded", () => {
         errBox.textContent = "";
       }
 
-      if (this.isVerified) {
-        if (challengeEl) challengeEl.style.display = "none";
-        if (resultEl) resultEl.style.display = "block";
-      } else {
-        if (challengeEl) challengeEl.style.display = "block";
-        if (resultEl) resultEl.style.display = "none";
-      }
+      // Всегда требуем прохождение теста заново: никакого кэширования
+      if (challengeEl) challengeEl.style.display = "block";
+      if (resultEl) resultEl.style.display = "none";
 
+      this.renderCaptcha();
       modal.classList.add("open");
     },
 
     closeModal() {
       const modal = document.getElementById("phone-protect-modal");
       if (modal) modal.classList.remove("open");
+      const challengeEl = document.getElementById("phone-protect-challenge");
+      const resultEl = document.getElementById("phone-protect-result");
+      if (challengeEl) challengeEl.style.display = "block";
+      if (resultEl) resultEl.style.display = "none";
     },
 
     chooseOption(isCorrect) {
       const errBox = document.getElementById("phone-protect-error");
       if (!isCorrect) {
         if (errBox) {
-          errBox.textContent = "Не совсем то! Выберите десерт 🍰, чтобы подтвердить, что вы человек.";
+          errBox.textContent = "Не совсем то! Выберите десерт (пирожное 🍰, капкейк 🧁 или торт 🎂), чтобы подтвердить, что вы человек.";
           errBox.style.display = "block";
         }
         return;
       }
 
-      this.isVerified = true;
       const challengeEl = document.getElementById("phone-protect-challenge");
       const resultEl = document.getElementById("phone-protect-result");
       if (challengeEl) challengeEl.style.display = "none";
@@ -767,20 +869,9 @@ document.addEventListener("DOMContentLoaded", () => {
     copyNumber() {
       const profile = typeof CatalogManager !== "undefined" ? CatalogManager.getProfile() : null;
       const phone = (profile && profile.phone) ? profile.phone : "+7 (915) 318-18-19";
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(phone).then(() => {
-          if (typeof showToast === "function") {
-            showToast("📋 Номер скопирован в буфер обмена!");
-          }
-        }).catch(() => {
-          if (typeof showToast === "function") {
-            showToast(`Номер: ${phone}`);
-          }
-        });
-      } else {
-        if (typeof showToast === "function") {
-          showToast(`Номер: ${phone}`);
-        }
+      copyTextToClipboard(phone);
+      if (typeof showToast === "function") {
+        showToast("📋 Номер скопирован в буфер обмена!");
       }
     }
   };

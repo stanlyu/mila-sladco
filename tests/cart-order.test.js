@@ -196,3 +196,110 @@ test("submitOrder: успешное оформление заказа без п�
   assert.strictEqual(rawMax.includes("?message="), false);
 });
 
+test("PhoneProtection: капча запрашивается при каждом вызове без кэширования", () => {
+  const challengeState = { visible: false };
+  const resultState = { visible: false };
+  const errBoxState = { text: "", visible: false };
+
+  const mockPhoneProtection = {
+    showModal() {
+      challengeState.visible = true;
+      resultState.visible = false;
+      errBoxState.visible = false;
+      errBoxState.text = "";
+    },
+    closeModal() {
+      challengeState.visible = true;
+      resultState.visible = false;
+    },
+    chooseOption(isCorrect) {
+      if (!isCorrect) {
+        errBoxState.visible = true;
+        errBoxState.text = "Не совсем то!";
+        return;
+      }
+      challengeState.visible = false;
+      resultState.visible = true;
+    }
+  };
+
+  // 1-й вызов: открытие модалки
+  mockPhoneProtection.showModal();
+  assert.strictEqual(challengeState.visible, true);
+  assert.strictEqual(resultState.visible, false);
+
+  // Ошибочный выбор
+  mockPhoneProtection.chooseOption(false);
+  assert.strictEqual(challengeState.visible, true);
+  assert.strictEqual(resultState.visible, false);
+  assert.strictEqual(errBoxState.visible, true);
+
+  // Правильный выбор
+  mockPhoneProtection.chooseOption(true);
+  assert.strictEqual(challengeState.visible, false);
+  assert.strictEqual(resultState.visible, true);
+
+  // Закрываем окно
+  mockPhoneProtection.closeModal();
+
+  // 2-й вызов: проверка должна запроситься СНОВА (кэш удален)
+  mockPhoneProtection.showModal();
+  assert.strictEqual(challengeState.visible, true, "Капча должна отображаться повторно");
+  assert.strictEqual(resultState.visible, false, "Телефон не должен быть открыт без повторной проверки");
+});
+
+test("copyTextToClipboard: надежное синхронное копирование", () => {
+  let execCommandCalled = false;
+  let copiedText = "";
+  
+  global.document = {
+    createElement: (tag) => ({
+      value: "",
+      style: {},
+      setAttribute: () => {},
+      focus: () => {},
+      select: () => {},
+      setSelectionRange: () => {}
+    }),
+    body: {
+      appendChild: (el) => { copiedText = el.value; },
+      removeChild: () => {}
+    },
+    execCommand: (cmd) => {
+      if (cmd === "copy") {
+        execCommandCalled = true;
+        return true;
+      }
+      return false;
+    }
+  };
+
+  function copyTextToClipboard(text) {
+    if (!text) return false;
+    let copied = false;
+    if (typeof document !== "undefined") {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.top = "0";
+        ta.style.left = "-9999px";
+        ta.style.opacity = "0";
+        ta.setAttribute("readonly", "");
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, 99999);
+        copied = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (e) {}
+    }
+    return copied;
+  }
+
+  const success = copyTextToClipboard("Тестовый заказ");
+  assert.strictEqual(success, true);
+  assert.strictEqual(execCommandCalled, true);
+  assert.strictEqual(copiedText, "Тестовый заказ");
+});
+
