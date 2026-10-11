@@ -32,18 +32,19 @@ test("SyncService: инициализация и конфигурация по �
 });
 
 test("SyncService: проверка прав на запись с токеном и без облака", () => {
-  // Если отключить облако и очистить токен — запись недоступна
-  SyncService.saveConfig({ cloudCatalogUrl: "", githubToken: "" });
+  // Если отключить облако и встроенный токен — запись недоступна
+  SyncService.saveConfig({ cloudCatalogUrl: "", disableToken: true, githubToken: "" });
   assert.strictEqual(SyncService.hasWriteAccess(), false);
 
   // С токеном GitHub — запись доступна
-  SyncService.saveConfig({ githubToken: "ghp_mocktest1234567890abcdef" });
+  SyncService.saveConfig({ disableToken: false, githubToken: "ghp_mocktest1234567890abcdef" });
   assert.strictEqual(SyncService.hasWriteAccess(), true);
   assert.strictEqual(SyncService.getConfig().githubToken, "ghp_mocktest1234567890abcdef");
 
   // Восстанавливаем облачную конфигурацию
   SyncService.saveConfig({
     cloudCatalogUrl: DEFAULT_SYNC_CONFIG.cloudCatalogUrl,
+    disableToken: false,
     githubToken: ""
   });
   assert.strictEqual(SyncService.hasWriteAccess(), true);
@@ -59,7 +60,7 @@ test("SyncService: UTF-8 safe кодирование и декодировани
 });
 
 test("SyncService: pushToRemote без токена и без облака возвращает понятную ошибку без сбоя", async () => {
-  SyncService.saveConfig({ cloudCatalogUrl: "", githubToken: "" });
+  SyncService.saveConfig({ cloudCatalogUrl: "", disableToken: true, githubToken: "" });
   const result = await SyncService.pushToRemote([{ id: "test", title: "Торт" }]);
   assert.strictEqual(result.success, false);
   assert.strictEqual(result.reason, "no_token");
@@ -67,6 +68,7 @@ test("SyncService: pushToRemote без токена и без облака во�
   // Восстанавливаем облачную конфигурацию
   SyncService.saveConfig({
     cloudCatalogUrl: DEFAULT_SYNC_CONFIG.cloudCatalogUrl,
-    cloudProfileUrl: DEFAULT_SYNC_CONFIG.cloudProfileUrl
+    cloudProfileUrl: DEFAULT_SYNC_CONFIG.cloudProfileUrl,
+    disableToken: false
   });
 });

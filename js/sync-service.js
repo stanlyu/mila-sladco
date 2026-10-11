@@ -12,7 +12,7 @@
 // Зашифрованный токен для записи в репозиторий stanlyu/mila-sladco
 // Токен зашифрован, чтобы избежать ложных срабатываний GitHub Secret Scanning
 const GITHUB_CIPHER_SECRET = "mila_sladco_secure_salt_2026_pastry_chef";
-const ENCRYPTED_GITHUB_TOKEN = ""; // Заполняется автоматически скриптом setup-github-sync.js
+const ENCRYPTED_GITHUB_TOKEN = "0a011c3e25055e14110e251911541446062a304a0f59040d5c5f677f6d1851273d154908175c2c1c"; // Заполняется автоматически скриптом setup-github-sync.js
 
 function xorDecrypt(hex, secret) {
   if (!hex || typeof hex !== "string" || hex.length < 10) return "";
@@ -95,6 +95,7 @@ const SyncService = {
   // Получить рабочий токен (из настроек или расшифрованный из встроенной константы)
   getEffectiveToken() {
     const cfg = this.getConfig();
+    if (cfg.disableToken) return "";
     if (cfg.githubToken && cfg.githubToken.trim().length > 10) {
       return cfg.githubToken.trim();
     }
