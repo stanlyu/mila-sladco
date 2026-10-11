@@ -848,6 +848,79 @@ body.modal-open .floating-cart-bar {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
+  padding-bottom: max(64px, calc(env(safe-area-inset-bottom, 0px) + 48px));
+  box-sizing: border-box;
+}
+
+/* Статус-бар облачной синхронизации в кабинете кондитера */
+.admin-sync-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #FAF7F2;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.admin-sync-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #40C057;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(64, 192, 87, 0.6);
+  transition: all var(--transition-fast);
+}
+
+.sync-dot.syncing {
+  background: #FAB005;
+  box-shadow: 0 0 6px rgba(250, 176, 5, 0.6);
+}
+
+.sync-dot.pending {
+  background: #FD7E14;
+  box-shadow: 0 0 6px rgba(253, 126, 20, 0.6);
+}
+
+.btn-admin-publish {
+  background: linear-gradient(135deg, #C59A47 0%, #A47D2E 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(197, 154, 71, 0.35);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-admin-publish:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(197, 154, 71, 0.45);
+}
+
+.btn-admin-publish:active {
+  transform: translateY(0);
+}
+
+.btn-admin-publish:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-today-pill {

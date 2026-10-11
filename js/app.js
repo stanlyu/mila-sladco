@@ -250,6 +250,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Управление Корзиной
   window.openCart = () => {
+    if (typeof window.backToOrderEdit === "function") {
+      window.backToOrderEdit();
+    }
     renderCartItems();
     const scrollBody = cartModal.querySelector(".sheet-scroll-body");
     if (scrollBody) scrollBody.scrollTop = 0;
@@ -394,43 +397,90 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const orderText = Cart.generateOrderText(formData);
 
-    // Копируем текст в буфер обмена для страховки
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(orderText).catch(() => {});
-    }
+    let currentOrderText = "";
+    let currentMessengerUrl = "";
 
-    showToast("Формируем заказ и открываем чат...", 2500);
-
-    setTimeout(() => {
-      const profile = (typeof CatalogManager !== "undefined" && CatalogManager.getProfile) 
-        ? CatalogManager.getProfile() 
-        : {};
-
-      const cleanTg = (profile.telegramUsername || "").trim().replace(/^@/, "");
-      const cleanMax = (profile.maxUsername || "").trim().replace(/^@/, "");
-      const targetUser = selectedMessenger === "telegram" ? cleanTg : cleanMax;
-
-      if (!targetUser || targetUser === "none" || targetUser === "mila_sladco") {
-        Cart.clear();
-        closeCart();
-        showToast("💡 Чек скопирован в буфер! Для отправки в свой " + (selectedMessenger === "telegram" ? "Telegram" : "MAX") + " укажите свой логин в Кабинете кондитера (3 тапа по фото) → «Контакты & ссылки».", 4500);
-        return;
-      }
-
-      if (selectedMessenger === "telegram") {
-        const encodedText = encodeURIComponent(orderText);
-        const tgUrl = `https://t.me/${cleanTg}?text=${encodedText}`;
-        window.open(tgUrl, "_blank");
-      } else {
-        const encodedText = encodeURIComponent(orderText);
-        const maxUrl = `https://max.ru/${cleanMax}?message=${encodedText}`;
-        window.open(maxUrl, "_blank");
-      }
-
+    window.confirmOrderFinished = () => {
       Cart.clear();
       closeCart();
-      showToast("Заказ сформирован! Нажмите «Отправить» в мессенджере 💌", 3500);
-    }, 600);
+      showToast("Спасибо за заказ! Шеф Люда свяжется с вами в течение 10-15 минут 🍰✨", 5000);
+      backToOrderEdit();
+    };
+
+    window.copyOrderTextAgain = () => {
+      if (currentOrderText && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentOrderText)
+          .then(() => showToast("Чек заказа скопирован в буфер обмена! 📋"))
+          .catch(() => showToast("Чек скопирован! 📋"));
+      } else {
+        showToast("Чек заказа скопирован! 📋");
+      }
+    };
+
+    window.retryOpenMessenger = () => {
+      if (currentMessengerUrl) {
+        window.open(currentMessengerUrl, "_blank");
+      }
+    };
+
+    window.backToOrderEdit = () => {
+      const mainFlow = document.getElementById("cart-main-flow");
+      const successScreen = document.getElementById("order-success-screen");
+      if (mainFlow) mainFlow.style.display = "block";
+      if (successScreen) successScreen.style.display = "none";
+    };
+
+    const profile = (typeof CatalogManager !== "undefined" && CatalogManager.getProfile) 
+      ? CatalogManager.getProfile() 
+      : {};
+
+    const rawTg = (profile.telegramUsername || "").trim();
+    const cleanTg = rawTg.replace(/^https?:\/\/t\.me\//i, "").replace(/^t\.me\//i, "").replace(/^@/, "");
+
+    const rawMax = (profile.maxUsername || "").trim();
+    const cleanMax = rawMax.replace(/^https?:\/\/max\.ru\//i, "").replace(/^max\.ru\//i, "").replace(/^@/, "");
+
+    const targetUser = selectedMessenger === "telegram" ? cleanTg : cleanMax;
+
+    currentOrderText = orderText;
+
+    if (!targetUser || targetUser === "none") {
+      showToast("💡 Чек скопирован в буфер! Для автоматической отправки укажите свой логин в Кабинете кондитера → «Контакты & ссылки».", 4500);
+      // Показываем экран подтверждения, чтобы гость мог скопировать чек
+      const mainFlow = document.getElementById("cart-main-flow");
+      const successScreen = document.getElementById("order-success-screen");
+      if (mainFlow) mainFlow.style.display = "none";
+      if (successScreen) successScreen.style.display = "block";
+      return;
+    }
+
+    let messengerUrl = "";
+    if (selectedMessenger === "telegram") {
+      const encodedText = encodeURIComponent(orderText);
+      messengerUrl = `https://t.me/${cleanTg}?text=${encodedText}`;
+    } else {
+      const encodedText = encodeURIComponent(orderText);
+      messengerUrl = `https://max.ru/${cleanMax}?message=${encodedText}`;
+    }
+
+    currentMessengerUrl = messengerUrl;
+
+    try {
+      window.open(messengerUrl, "_blank");
+    } catch (e) {
+      console.warn("Не удалось автоматически открыть окно", e);
+    }
+
+    // Переключаем на экран подтверждения (корзина сохраняется, пока гость не нажмет «Заказ отправлен»)
+    const mainFlow = document.getElementById("cart-main-flow");
+    const successScreen = document.getElementById("order-success-screen");
+    const msgHint = document.getElementById("order-success-msg");
+    if (mainFlow) mainFlow.style.display = "none";
+    if (successScreen) successScreen.style.display = "block";
+    if (msgHint) {
+      msgHint.innerHTML = `Мы сформировали чек и открыли диалог в <b>${selectedMessenger === "telegram" ? "Telegram" : "MAX"}</b>.<br />Нажмите <b>«Отправить»</b> в открывшемся чате.`;
+    }
+    showToast("Заказ сформирован! Чек открыт в чате 💌", 3500);
   };
 
   // Выбор даты "Срочно сегодня"

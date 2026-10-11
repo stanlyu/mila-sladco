@@ -129,10 +129,88 @@ const AdminPanel = {
     }
   },
 
+  hasUnpublishedChanges: false,
+  isSyncing: false,
+  lastPublishedTime: null,
+
+  setSyncState(state, message) {
+    const dot = document.getElementById("sync-status-dot");
+    const text = document.getElementById("sync-status-text");
+    const btn = document.getElementById("btn-admin-publish");
+
+    if (dot) {
+      dot.className = "sync-dot";
+      if (state === "syncing") dot.classList.add("syncing");
+      if (state === "pending") dot.classList.add("pending");
+    }
+
+    if (text) {
+      if (message) {
+        text.textContent = message;
+      } else if (state === "syncing") {
+        text.textContent = "⏳ Сохранение на GitHub...";
+      } else if (state === "pending") {
+        text.textContent = "⚠️ Есть несохранённые правки";
+      } else {
+        const timeStr = this.lastPublishedTime || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        text.textContent = `🟢 Все изменения сохранены на GitHub (${timeStr})`;
+      }
+    }
+
+    if (btn) {
+      btn.disabled = (state === "syncing");
+      btn.textContent = (state === "syncing") ? "⏳ Публикуем..." : "🚀 Опубликовать";
+    }
+  },
+
+  async syncToCloud() {
+    this.hasUnpublishedChanges = true;
+    this.isSyncing = true;
+    this.setSyncState("syncing");
+
+    if (typeof SyncService !== "undefined") {
+      try {
+        const res = await SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
+        if (res && res.success) {
+          this.hasUnpublishedChanges = false;
+          this.lastPublishedTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          this.setSyncState("synced");
+          return true;
+        } else {
+          this.setSyncState("pending", "⚠️ Ошибка связи с GitHub");
+          return false;
+        }
+      } catch (e) {
+        this.setSyncState("pending", "⚠️ Ошибка сети при синхронизации");
+        return false;
+      } finally {
+        this.isSyncing = false;
+      }
+    }
+    this.hasUnpublishedChanges = false;
+    this.setSyncState("synced");
+    return true;
+  },
+
+  async manualPublish() {
+    showToast("Отправляем изменения в базу данных GitHub... 🚀");
+    const ok = await this.syncToCloud();
+    if (ok) {
+      showToast("🎉 Все изменения успешно опубликованы на GitHub! Клиенты сразу видят свежую витрину.", 4500);
+    } else {
+      showToast("Не удалось опубликовать. Проверьте интернет-соединение.", 4000);
+    }
+  },
+
   // Выход из сессии кондитера
   logout() {
+    if (this.hasUnpublishedChanges || this.isSyncing) {
+      if (!confirm("У вас есть изменения, которые ещё отправляются на GitHub. Вы уверены, что хотите выйти сейчас без ожидания публикации?")) {
+        return;
+      }
+    }
     AuthSecurity.logout();
-    this.close();
+    this.close(true);
     showToast("Вы вышли из режима кондитера 🔒");
   },
 
@@ -141,6 +219,7 @@ const AdminPanel = {
     if (!modal) return;
     this.updateChefAvatarPreview();
     this.renderAdminList();
+    this.setSyncState(this.hasUnpublishedChanges ? "pending" : "synced");
     modal.classList.add("open");
 
     // Если Люда впервые в кабинете — запускаем интерактивный тур
@@ -150,7 +229,12 @@ const AdminPanel = {
     }
   },
 
-  close() {
+  close(force = false) {
+    if (!force && (this.hasUnpublishedChanges || this.isSyncing)) {
+      if (!confirm("У вас есть изменения, которые ещё отправляются на GitHub. Закрыть окно без ожидания публикации?")) {
+        return;
+      }
+    }
     const modal = document.getElementById("admin-modal");
     if (modal) modal.classList.remove("open");
     this.closeEditModal();
@@ -174,9 +258,7 @@ const AdminPanel = {
           CatalogManager.updateProfile({ avatar: compressed });
           this.updateChefAvatarPreview();
           showToast("Фото шеф-кондитера обновлено! 📸✨");
-          if (typeof SyncService !== "undefined") {
-            SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
-          }
+          this.syncToCloud();
           return;
         }
       } catch (e) {
@@ -188,9 +270,7 @@ const AdminPanel = {
         CatalogManager.updateProfile({ avatar: base64Url });
         this.updateChefAvatarPreview();
         showToast("Фото шеф-кондитера успешно обновлено! 📸✨");
-        if (typeof SyncService !== "undefined") {
-          SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
-        }
+        this.syncToCloud();
       };
       reader.readAsDataURL(file);
     }
@@ -247,18 +327,14 @@ const AdminPanel = {
     }
     CatalogManager.updateProduct(id, { price: priceNum });
     showToast("Цена успешно обновлена! ✨");
-    if (typeof SyncService !== "undefined") {
-      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
-    }
+    this.syncToCloud();
   },
 
   toggleStatus(id) {
     const newStatus = CatalogManager.toggleAvailability(id);
     this.renderAdminList();
     showToast(newStatus ? "Десерт снова на витрине!" : "Десерт скрыт с витрины (закончился)");
-    if (typeof SyncService !== "undefined") {
-      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
-    }
+    this.syncToCloud();
   },
 
   deleteProduct(id) {
@@ -268,9 +344,7 @@ const AdminPanel = {
       CatalogManager.deleteProduct(id);
       this.renderAdminList();
       showToast("Десерт удален");
-      if (typeof SyncService !== "undefined") {
-        SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
-      }
+      this.syncToCloud();
     }
   },
 
@@ -399,11 +473,7 @@ const AdminPanel = {
 
     this.closeEditModal();
     this.renderAdminList();
-
-    // Фоновая синхронизация с облаком
-    if (typeof SyncService !== "undefined") {
-      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
-    }
+    this.syncToCloud();
   },
 
   // Смена PIN-кода Людой через модальное окно
@@ -471,6 +541,7 @@ const AdminPanel = {
     if (res.success) {
       this.closeChangePinModal();
       showToast("PIN-код успешно изменен на новый! 🔐✨", 4000);
+      this.syncToCloud();
     } else {
       showToast(res.message, 4000);
     }
@@ -499,9 +570,7 @@ const AdminPanel = {
       if (typeof renderProfile === "function") {
         renderProfile();
       }
-      if (typeof SyncService !== "undefined") {
-        SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
-      }
+      this.syncToCloud();
       showToast("Все настройки сброшены до стандартных (PIN 1819) ✨", 4000);
     }
   },
@@ -664,9 +733,7 @@ const AdminPanel = {
       renderProfile();
     }
     showToast("Контакты и настройки ссылок обновлены! 📱✨");
-    if (typeof SyncService !== "undefined") {
-      SyncService.pushToRemote(CatalogManager.getProducts(), CatalogManager.getProfile());
-    }
+    this.syncToCloud();
   },
 
   // ==========================================

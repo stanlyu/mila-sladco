@@ -288,103 +288,138 @@
 
       <div class="sheet-scroll-body">
         <div class="cart-sheet-content">
-          <h3 class="cart-title">Ваш сладкий заказ</h3>
+          <!-- Основной поток оформления заказа -->
+          <div id="cart-main-flow">
+            <h3 class="cart-title">Ваш сладкий заказ</h3>
 
-          <!-- Пустая корзина -->
-          <div id="cart-empty-state" class="cart-empty-state">
-            <div class="cart-empty-icon">🍰</div>
-            <p style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Ваша корзина пока пуста</p>
-            <p style="font-size: 13px;">Выберите аппетитные корпусные пирожные или подарочный набор в витрине!</p>
-          </div>
-
-          <!-- Список добавленных десертов -->
-          <div id="cart-items-list" class="cart-items-list">
-            <!-- Генерируется из app.js -->
-          </div>
-
-          <!-- Форма оформления заказа -->
-          <div id="checkout-box" class="checkout-box">
-            <div class="checkout-box-title">
-              <span>📝</span> Детали для доставки
+            <!-- Пустая корзина -->
+            <div id="cart-empty-state" class="cart-empty-state">
+              <div class="cart-empty-icon">🍰</div>
+              <p style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Ваша корзина пока пуста</p>
+              <p style="font-size: 13px;">Выберите аппетитные корпусные пирожные или подарочный набор в витрине!</p>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="order-name">Ваше имя *</label>
-              <input type="text" id="order-name" class="form-input" placeholder="Например: Анастасия" required />
+            <!-- Список добавленных десертов -->
+            <div id="cart-items-list" class="cart-items-list">
+              <!-- Генерируется из app.js -->
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="order-phone">Телефон или ник для связи *</label>
-              <input type="text" id="order-phone" class="form-input" placeholder="+7 (999) 000-00-00 или @username" required />
-            </div>
-
-            <!-- Выбор канала связи -->
-            <div class="form-group">
-              <label class="form-label">Куда отправить заказ кондитеру?</label>
-              <div class="messenger-selector">
-                <label class="messenger-option selected" data-type="max">
-                  <input type="radio" name="order-messenger" value="max" checked />
-                  <span>💬 В MAX</span>
-                </label>
-                <label class="messenger-option" data-type="telegram">
-                  <input type="radio" name="order-messenger" value="telegram" />
-                  <span>✈️ В Telegram</span>
-                </label>
+            <!-- Форма оформления заказа -->
+            <div id="checkout-box" class="checkout-box">
+              <div class="checkout-box-title">
+                <span>📝</span> Детали для доставки
               </div>
-            </div>
 
-            <div class="form-row-2">
               <div class="form-group">
-                <label class="form-label" for="order-date">📅 Дата готовности</label>
-                <input type="date" id="order-date" class="form-input" />
-                <button type="button" id="btn-order-today" class="btn-today-pill" onclick="setOrderDateToday()">⚡ Срочно на сегодня</button>
+                <label class="form-label" for="order-name">Ваше имя *</label>
+                <input type="text" id="order-name" class="form-input" placeholder="Например: Анастасия" required />
               </div>
+
               <div class="form-group">
-                <label class="form-label" for="order-time">⏰ Время доставки</label>
-                <select id="order-time" class="form-select" onchange="toggleCustomTime(this.value)">
-                  <option value="11:00 - 14:00">11:00 - 14:00</option>
-                  <option value="14:00 - 18:00" selected>14:00 - 18:00</option>
-                  <option value="18:00 - 21:00">18:00 - 21:00</option>
-                  <option value="custom">🎯 Точное время...</option>
+                <label class="form-label" for="order-phone">Телефон или ник для связи *</label>
+                <input type="text" id="order-phone" class="form-input" placeholder="+7 (999) 000-00-00 или @username" required />
+              </div>
+
+              <!-- Выбор канала связи -->
+              <div class="form-group">
+                <label class="form-label">Куда отправить заказ кондитеру?</label>
+                <div class="messenger-selector">
+                  <label class="messenger-option selected" data-type="max">
+                    <input type="radio" name="order-messenger" value="max" checked />
+                    <span>💬 В MAX</span>
+                  </label>
+                  <label class="messenger-option" data-type="telegram">
+                    <input type="radio" name="order-messenger" value="telegram" />
+                    <span>✈️ В Telegram</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="order-date">📅 Дата готовности</label>
+                  <input type="date" id="order-date" class="form-input" />
+                  <button type="button" id="btn-order-today" class="btn-today-pill" onclick="setOrderDateToday()">⚡ Срочно на сегодня</button>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="order-time">⏰ Время доставки</label>
+                  <select id="order-time" class="form-select" onchange="toggleCustomTime(this.value)">
+                    <option value="11:00 - 14:00">11:00 - 14:00</option>
+                    <option value="14:00 - 18:00" selected>14:00 - 18:00</option>
+                    <option value="18:00 - 21:00">18:00 - 21:00</option>
+                    <option value="custom">🎯 Точное время...</option>
+                  </select>
+                  <input type="time" id="order-custom-time" class="form-input" style="display: none; margin-top: 6px;" value="15:00" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="order-delivery">Способ получения</label>
+                <select id="order-delivery" class="form-select" onchange="document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none'">
+                  <option value="delivery" selected>🚚 Доставка курьером (Москва и МО)</option>
+                  <option value="pickup">🚶 Самовывоз (м. Раменки)</option>
                 </select>
-                <input type="time" id="order-custom-time" class="form-input" style="display: none; margin-top: 6px;" value="15:00" />
+              </div>
+
+              <div id="address-group" class="form-group">
+                <label class="form-label" for="order-address">Адрес доставки</label>
+                <input type="text" id="order-address" class="form-input" placeholder="Улица, дом, квартира/офис" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="order-comment">Пожелания / надпись на торте или открытке</label>
+                <textarea id="order-comment" class="form-textarea" rows="2" placeholder="Например: надпись «С Днём Рождения!», открытка с пожеланием или без сахара"></textarea>
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="order-delivery">Способ получения</label>
-              <select id="order-delivery" class="form-select" onchange="document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none'">
-                <option value="delivery" selected>🚚 Доставка курьером (Москва и МО)</option>
-                <option value="pickup">🚶 Самовывоз (м. Раменки)</option>
-              </select>
+            <!-- Итоговая сумма -->
+            <div id="cart-summary" class="cart-summary">
+              <span style="font-weight: 600; color: var(--color-muted);">Сумма заказа:</span>
+              <span id="cart-total-price" class="cart-summary-total">0 ₽</span>
             </div>
 
-            <div id="address-group" class="form-group">
-              <label class="form-label" for="order-address">Адрес доставки</label>
-              <input type="text" id="order-address" class="form-input" placeholder="Улица, дом, квартира/офис" />
-            </div>
+            <!-- Кнопка отправки -->
+            <button id="btn-send-order" type="button" class="btn-send-order max-style" onclick="submitOrder()">
+              💬 Отправить заказ в MAX
+            </button>
 
-            <div class="form-group">
-              <label class="form-label" for="order-comment">Пожелания / надпись на торте или открытке</label>
-              <textarea id="order-comment" class="form-textarea" rows="2" placeholder="Например: надпись «С Днём Рождения!», открытка с пожеланием или без сахара"></textarea>
-            </div>
+            <p class="order-hint">
+              ✨ Заказ сразу откроется в вашем диалоге с кондитером Людой со всеми деталями.
+            </p>
           </div>
 
-          <!-- Итоговая сумма -->
-          <div id="cart-summary" class="cart-summary">
-            <span style="font-weight: 600; color: var(--color-muted);">Сумма заказа:</span>
-            <span id="cart-total-price" class="cart-summary-total">0 ₽</span>
+          <!-- Экран успеха / подтверждения отправки заказа -->
+          <div id="order-success-screen" style="display: none; text-align: center; padding: 20px 0 10px;">
+            <div style="font-size: 48px; margin-bottom: 10px;">💌</div>
+            <h3 style="font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: var(--color-primary); margin-bottom: 8px;">
+              Заказ готов к отправке!
+            </h3>
+            <p id="order-success-msg" style="font-size: 13px; color: var(--color-muted); line-height: 1.5; margin-bottom: 18px;">
+              Мы сформировали чек и открыли диалог с шеф-кондитером Людой.<br />
+              Нажмите <b>«Отправить»</b> в открывшемся мессенджере.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+              <button type="button" class="btn-send-order max-style" onclick="confirmOrderFinished()">
+                ✅ Заказ отправлен (Очистить корзину)
+              </button>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-admin-secondary" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 600;" onclick="copyOrderTextAgain()">
+                  📋 Скопировать чек
+                </button>
+                <button type="button" class="btn-admin-secondary" style="flex: 1; padding: 10px; font-size: 12px; font-weight: 600;" onclick="retryOpenMessenger()">
+                  🔄 Открыть чат снова
+                </button>
+              </div>
+              <button type="button" class="btn-pin-reset-link" style="margin-top: 4px;" onclick="backToOrderEdit()">
+                ← Вернуться к редактированию заказа
+              </button>
+            </div>
+
+            <div style="font-size: 11px; color: var(--color-muted); line-height: 1.4; background: #FAF7F2; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--color-border);">
+              💡 <b>Не открылся чат?</b> Нажмите «Скопировать чек» и отправьте его кондитеру вручную. Корзина не пропадет, пока вы не нажмете «Заказ отправлен».
+            </div>
           </div>
-
-          <!-- Кнопка отправки -->
-          <button id="btn-send-order" type="button" class="btn-send-order max-style" onclick="submitOrder()">
-            💬 Отправить заказ в MAX
-          </button>
-
-          <p class="order-hint">
-            ✨ Заказ сразу откроется в вашем диалоге с кондитером Людой со всеми деталями.
-          </p>
-
         </div>
       </div>
     </div>
@@ -520,83 +555,96 @@
       <div class="sheet-drag-handle"></div>
       <button type="button" class="sheet-close-btn" onclick="AdminPanel.close()" aria-label="Закрыть">✕</button>
 
-      <div style="padding: 0 20px 28px;">
-        <div class="admin-header-box">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <h3 class="admin-sheet-title">👩‍🍳 Кабинет Люды</h3>
-            <button type="button" class="btn-help-badge" onclick="AdminPanel.openTour()" title="Открыть обучающий тур">
-              🎓 Обучение
+      <div class="sheet-scroll-body">
+        <div style="padding: 0 20px 28px;">
+          <div class="admin-header-box">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 class="admin-sheet-title">👩‍🍳 Кабинет Люды</h3>
+              <button type="button" class="btn-help-badge" onclick="AdminPanel.openTour()" title="Открыть обучающий тур">
+                🎓 Обучение
+              </button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" id="btn-toggle-tooltips" class="btn-tooltip-toggle active" onclick="AdminPanel.toggleTooltips()" title="Включить/выключить подсказки на кнопках">
+                💡 Подсказки
+              </button>
+              <button type="button" class="btn-admin-action btn-admin-logout" onclick="AdminPanel.logout()" title="Выйти из режима">
+                🔒 Выйти
+              </button>
+            </div>
+          </div>
+
+          <!-- Панель статуса облачной синхронизации с GitHub -->
+          <div class="admin-sync-bar" id="admin-sync-bar">
+            <div class="admin-sync-status">
+              <span class="sync-dot" id="sync-status-dot"></span>
+              <span id="sync-status-text">🟢 Все изменения сохранены на GitHub</span>
+            </div>
+            <button type="button" id="btn-admin-publish" class="btn-admin-publish" onclick="AdminPanel.manualPublish()" title="Опубликовать изменения для клиентов">
+              🚀 Опубликовать
             </button>
           </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <button type="button" id="btn-toggle-tooltips" class="btn-tooltip-toggle active" onclick="AdminPanel.toggleTooltips()" title="Включить/выключить подсказки на кнопках">
-              💡 Подсказки
-            </button>
-            <button type="button" class="btn-admin-action btn-admin-logout" onclick="AdminPanel.logout()" title="Выйти из режима">
-              🔒 Выйти
+
+          <!-- Карточка шеф-кондитера: аватарка и статус -->
+          <div class="admin-profile-card">
+            <div class="admin-profile-thumb-wrap">
+              <img id="admin-chef-avatar-preview" src="assets/images/chef-mila.jpg" alt="Шеф Люда" class="admin-chef-avatar" />
+              <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('avatar', this)" aria-label="Подсказка">?</button>
+            </div>
+            <div class="admin-profile-meta">
+              <div class="admin-profile-title">Фото кондитера в шапке сайта</div>
+              <div class="admin-profile-subtitle">Отображается на главной странице гостям</div>
+              <label class="btn-change-avatar">
+                📸 Сменить фото шефа
+                <input type="file" accept="image/*" style="display: none;" onchange="AdminPanel.handleChefAvatarUpload(this)" />
+              </label>
+            </div>
+          </div>
+
+          <div class="admin-top-actions">
+            <div style="display: inline-flex; align-items: center; gap: 4px;">
+              <button type="button" class="btn-admin-primary" onclick="AdminPanel.openAddNew()">
+                <span>✨</span> + Добавить десерт
+              </button>
+              <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('add', this)" aria-label="Подсказка">?</button>
+            </div>
+
+            <div style="display: inline-flex; align-items: center; gap: 4px;">
+              <button type="button" class="btn-admin-secondary" onclick="AdminPanel.exportBackup()" title="Сохранить резервную копию меню">
+                💾 Скачать меню
+              </button>
+              <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('backup', this)" aria-label="Подсказка">?</button>
+            </div>
+
+            <div style="display: inline-flex; align-items: center; gap: 4px;">
+              <button type="button" class="btn-admin-secondary" onclick="AdminPanel.openChangePinModal()" title="Изменить PIN-код">
+                🔑 Сменить PIN
+              </button>
+              <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('pin', this)" aria-label="Подсказка">?</button>
+            </div>
+
+            <div style="display: inline-flex; align-items: center; gap: 4px;">
+              <button type="button" class="btn-admin-secondary" onclick="AdminPanel.openContactsModal()" title="Настройки ссылок и телефона">
+                📱 Контакты & ссылки
+              </button>
+              <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('contacts', this)" aria-label="Подсказка">?</button>
+            </div>
+
+            <button type="button" class="btn-admin-secondary" onclick="AdminPanel.resetDefaults()" style="color: #C92A2A;" title="Сбросить к исходным">
+              🔄 Сброс
             </button>
           </div>
+
+          <p style="font-size: 12px; color: var(--color-muted); margin-bottom: 12px;">
+            💡 Ниже вы можете прямо с телефона менять цены, скрывать десерты («Закончился») и добавлять свои фото.
+          </p>
+
+          <!-- Список товаров для управления -->
+          <div id="admin-products-list" class="admin-list">
+            <!-- Генерируется из admin.js -->
+          </div>
+
         </div>
-
-        <!-- Карточка шеф-кондитера: аватарка и статус -->
-        <div class="admin-profile-card">
-          <div class="admin-profile-thumb-wrap">
-            <img id="admin-chef-avatar-preview" src="assets/images/chef-mila.jpg" alt="Шеф Люда" class="admin-chef-avatar" />
-            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('avatar', this)" aria-label="Подсказка">?</button>
-          </div>
-          <div class="admin-profile-meta">
-            <div class="admin-profile-title">Фото кондитера в шапке сайта</div>
-            <div class="admin-profile-subtitle">Отображается на главной странице гостям</div>
-            <label class="btn-change-avatar">
-              📸 Сменить фото шефа
-              <input type="file" accept="image/*" style="display: none;" onchange="AdminPanel.handleChefAvatarUpload(this)" />
-            </label>
-          </div>
-        </div>
-
-        <div class="admin-top-actions">
-          <div style="display: inline-flex; align-items: center; gap: 4px;">
-            <button type="button" class="btn-admin-primary" onclick="AdminPanel.openAddNew()">
-              <span>✨</span> + Добавить десерт
-            </button>
-            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('add', this)" aria-label="Подсказка">?</button>
-          </div>
-
-          <div style="display: inline-flex; align-items: center; gap: 4px;">
-            <button type="button" class="btn-admin-secondary" onclick="AdminPanel.exportBackup()" title="Сохранить резервную копию меню">
-              💾 Скачать меню
-            </button>
-            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('backup', this)" aria-label="Подсказка">?</button>
-          </div>
-
-          <div style="display: inline-flex; align-items: center; gap: 4px;">
-            <button type="button" class="btn-admin-secondary" onclick="AdminPanel.openChangePinModal()" title="Изменить PIN-код">
-              🔑 Сменить PIN
-            </button>
-            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('pin', this)" aria-label="Подсказка">?</button>
-          </div>
-
-          <div style="display: inline-flex; align-items: center; gap: 4px;">
-            <button type="button" class="btn-admin-secondary" onclick="AdminPanel.openContactsModal()" title="Настройки ссылок и телефона">
-              📱 Контакты & ссылки
-            </button>
-            <button type="button" class="tooltip-bubble" onclick="AdminPanel.showBubble('contacts', this)" aria-label="Подсказка">?</button>
-          </div>
-
-          <button type="button" class="btn-admin-secondary" onclick="AdminPanel.resetDefaults()" style="color: #C92A2A;" title="Сбросить к исходным">
-            🔄 Сброс
-          </button>
-        </div>
-
-        <p style="font-size: 12px; color: var(--color-muted); margin-bottom: 12px;">
-          💡 Ниже вы можете прямо с телефона менять цены, скрывать десерты («Закончился») и добавлять свои фото.
-        </p>
-
-        <!-- Список товаров для управления -->
-        <div id="admin-products-list" class="admin-list">
-          <!-- Генерируется из admin.js -->
-        </div>
-
       </div>
     </div>
   </div>
@@ -754,7 +802,7 @@
       <button type="button" class="sheet-close-btn" onclick="AdminPanel.closeContactsModal()" aria-label="Закрыть">✕</button>
 
       <div class="sheet-scroll-body">
-        <div style="padding: 0 20px 32px;">
+        <div style="padding: 0 20px max(90px, calc(env(safe-area-inset-bottom, 0px) + 70px));">
           <h3 class="admin-sheet-title" style="margin-bottom: 8px;">📱 Контакты и кнопки на главной</h3>
           <p style="font-size: 12px; color: var(--color-muted); margin-bottom: 16px;">
             Включайте или отключайте кнопки на визитке и указывайте ссылки для связи с клиентами.
@@ -939,7 +987,7 @@
 
         <div class="form-group">
           <label class="form-label" for="form-edit-title">Название десерта *</label>
-          <input type="text" id="form-edit-title" class="form-input" placeholder="Например: Малиновый тарт" required />
+          <input type="text" id="form-edit-title" class="form-input" placeholder="Например: Малиновый торт" required />
         </div>
 
         <div class="form-row-2">
