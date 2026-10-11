@@ -750,6 +750,8 @@ body.modal-open .floating-cart-bar {
   justify-content: center;
   touch-action: none;
   overscroll-behavior: contain;
+  padding-top: max(40px, calc(env(safe-area-inset-top, 0px) + 24px));
+  box-sizing: border-box;
 }
 
 .modal-overlay.open {
@@ -762,9 +764,9 @@ body.modal-open .floating-cart-bar {
   max-width: 480px;
   background: #FFFFFF;
   border-radius: 28px 28px 0 0;
-  max-height: 90vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  max-height: calc(88vh - env(safe-area-inset-top, 0px));
+  margin-top: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
   touch-action: pan-y;
   transform: translateY(100%);
@@ -773,6 +775,11 @@ body.modal-open .floating-cart-bar {
   flex-direction: column;
   box-shadow: var(--shadow-lg);
   position: relative;
+}
+
+.bottom-sheet:not(:has(.sheet-scroll-body)) {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-overlay.open .bottom-sheet {
@@ -787,9 +794,45 @@ body.modal-open .floating-cart-bar {
   margin: 12px auto 6px;
   cursor: grab;
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .sheet-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-primary);
+  z-index: 120;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sheet-close-btn:hover {
+  background: #FFFFFF;
+  transform: scale(1.05);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+}
+
+.sheet-close-btn:active {
+  transform: scale(0.92);
+  background: #F0ECE4;
+}
+
+.bottom-sheet:not(:has(.sheet-scroll-body)) > .sheet-close-btn {
   position: sticky;
   top: 14px;
   align-self: flex-end;
@@ -797,29 +840,14 @@ body.modal-open .floating-cart-bar {
   margin-right: 16px;
   margin-top: 0;
   margin-bottom: -36px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  font-size: 15px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--color-primary);
-  z-index: 100;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: transform var(--transition-fast), background var(--transition-fast);
-  flex-shrink: 0;
 }
 
-.sheet-close-btn:active {
-  transform: scale(0.92);
-  background: #F0ECE4;
+.sheet-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .btn-today-pill {

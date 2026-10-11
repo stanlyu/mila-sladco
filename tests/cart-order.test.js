@@ -95,3 +95,55 @@ test("Cart: генерация читаемого заказа для MAX и Tel
   assert.ok(orderText.includes("С надписью «С днём рождения, мама!»"));
   assert.ok(orderText.includes("MAX"));
 });
+
+test("Cart: сброс корзины при истечении срока жизни сессии (TTL 2 часа)", () => {
+  CatalogManager.init();
+  Cart.init(CatalogManager);
+  Cart.clear();
+  Cart.addItem("mango-passion", 1);
+  assert.strictEqual(Cart.getTotalCount(), 1);
+
+  // Имитируем сохранение 3 часа назад
+  const expiredTime = Date.now() - (3 * 60 * 60 * 1000);
+  global.localStorage.setItem(Cart.STORAGE_TIME_KEY, expiredTime.toString());
+
+  // При новом входе Cart.init() обнаруживает протухшую корзину и очищает её
+  Cart.init(CatalogManager);
+  assert.strictEqual(Cart.getTotalCount(), 0);
+  assert.strictEqual(Cart.items.length, 0);
+});
+
+test("Cart: сброс устаревшей корзины при открытии новой сессии вкладки", () => {
+  // Настраиваем mock sessionStorage
+  class SessionStorageMock {
+    constructor() {
+      this.store = {};
+    }
+    getItem(key) {
+      return this.store[key] || null;
+    }
+    setItem(key, value) {
+      this.store[key] = String(value);
+    }
+    removeItem(key) {
+      delete this.store[key];
+    }
+    clear() {
+      this.store = {};
+    }
+  }
+
+  global.sessionStorage = new SessionStorageMock();
+  Cart.init(CatalogManager);
+  Cart.addItem("chocolate-truffle", 2);
+  assert.strictEqual(Cart.getTotalCount(), 2);
+
+  // Пользователь закрыл вкладку -> sessionStorage очищен
+  global.sessionStorage.clear();
+
+  // При новом открытии сайта корзина автоматически очищается для нового заказа
+  Cart.init(CatalogManager);
+  assert.strictEqual(Cart.getTotalCount(), 0);
+  assert.strictEqual(Cart.items.length, 0);
+});
+

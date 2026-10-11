@@ -594,12 +594,22 @@ const AdminPanel = {
     const phoneInput = document.getElementById("setting-phone");
     const showPhoneCheckbox = document.getElementById("setting-show-phone");
 
+    const showTgDirectCb = document.getElementById("setting-show-tg-direct");
+    const showMaxDirectCb = document.getElementById("setting-show-max-direct");
+    const showTgChanCb = document.getElementById("setting-show-tg-channel");
+    const showMaxChanCb = document.getElementById("setting-show-max-channel");
+
     if (tgUser) tgUser.value = profile.telegramUsername || "";
     if (tgChan) tgChan.value = profile.telegramChannelUrl || "";
     if (maxUser) maxUser.value = profile.maxUsername || "";
     if (maxChan) maxChan.value = profile.maxChannelUrl || "";
     if (phoneInput) phoneInput.value = profile.phone || "+7 (915) 318-18-19";
     if (showPhoneCheckbox) showPhoneCheckbox.checked = Boolean(profile.showPhone);
+
+    if (showTgDirectCb) showTgDirectCb.checked = profile.showTelegramDirect !== false;
+    if (showMaxDirectCb) showMaxDirectCb.checked = profile.showMaxDirect !== false;
+    if (showTgChanCb) showTgChanCb.checked = profile.showTelegramChannel !== false;
+    if (showMaxChanCb) showMaxChanCb.checked = Boolean(profile.showMaxChannel);
 
     modal.classList.add("open");
   },
@@ -617,6 +627,11 @@ const AdminPanel = {
     const phoneInput = document.getElementById("setting-phone");
     const showPhoneCheckbox = document.getElementById("setting-show-phone");
 
+    const showTgDirectCb = document.getElementById("setting-show-tg-direct");
+    const showMaxDirectCb = document.getElementById("setting-show-max-direct");
+    const showTgChanCb = document.getElementById("setting-show-tg-channel");
+    const showMaxChanCb = document.getElementById("setting-show-max-channel");
+
     const cleanTg = (tgUser ? tgUser.value.trim() : "").replace(/^@/, "");
     const tgChannel = tgChan ? tgChan.value.trim() : "";
     const maxLogin = (maxUser ? maxUser.value.trim() : "").replace(/^@/, "");
@@ -625,11 +640,20 @@ const AdminPanel = {
     const cleanDigits = phoneVal.replace(/[^\d+]/g, "");
     const showPhone = showPhoneCheckbox ? showPhoneCheckbox.checked : false;
 
+    const showTgDirect = showTgDirectCb ? showTgDirectCb.checked : true;
+    const showMaxDirect = showMaxDirectCb ? showMaxDirectCb.checked : true;
+    const showTgChannel = showTgChanCb ? showTgChanCb.checked : true;
+    const showMaxChannel = showMaxChanCb ? showMaxChanCb.checked : false;
+
     CatalogManager.updateProfile({
       telegramUsername: cleanTg,
       telegramChannelUrl: tgChannel,
       maxUsername: maxLogin,
       maxChannelUrl: maxChannel,
+      showTelegramDirect: showTgDirect,
+      showMaxDirect: showMaxDirect,
+      showTelegramChannel: showTgChannel,
+      showMaxChannel: showMaxChannel,
       phone: phoneVal,
       phoneClean: cleanDigits.startsWith("+") ? cleanDigits : ("+" + cleanDigits),
       showPhone: showPhone

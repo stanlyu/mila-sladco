@@ -72,7 +72,7 @@
       <!-- Кнопки быстрых действий -->
       <div class="taplink-actions">
         
-        <!-- Кнопка 1: Написать в MAX -->
+        <!-- Кнопка 1: Написать в MAX (личный диалог) -->
         <a id="link-btn-max" href="https://max.ru/mila_sladco" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-max">
           <div class="taplink-btn-content">
             <div class="taplink-icon">💬</div>
@@ -84,20 +84,44 @@
           <span class="taplink-arrow">›</span>
         </a>
 
-        <!-- Кнопка 2: Telegram-канал -->
-        <a id="link-btn-telegram" href="https://t.me/mila_sladco_cakes" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-telegram">
+        <!-- Кнопка 2: Написать в Telegram (личный диалог) -->
+        <a id="link-btn-telegram-direct" href="https://t.me/mila_sladco" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-telegram">
           <div class="taplink-btn-content">
-            <div class="taplink-icon">📢</div>
+            <div class="taplink-icon">✈️</div>
             <div>
-              <div class="taplink-text-title">Наш Telegram-канал</div>
-              <div class="taplink-text-sub">Анонсы вкусов, закулисье и отзывы</div>
+              <div class="taplink-text-title">Написать в Telegram</div>
+              <div id="link-sub-tg-direct" class="taplink-text-sub">Быстрый ответ кондитера в чате</div>
             </div>
           </div>
           <span class="taplink-arrow">›</span>
         </a>
 
-        <!-- Кнопка 3: Открыть витрину десертов -->
-        <button type="button" class="taplink-btn btn-showcase" onclick="switchTab('showcase')">
+        <!-- Кнопка 3: Telegram-канал кондитерской -->
+        <a id="link-btn-telegram" href="https://t.me/mila_sladco1" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-telegram">
+          <div class="taplink-btn-content">
+            <div class="taplink-icon">📢</div>
+            <div>
+              <div class="taplink-text-title">Наш Telegram-канал</div>
+              <div id="link-sub-tg-channel" class="taplink-text-sub">Анонсы вкусов, закулисье и отзывы</div>
+            </div>
+          </div>
+          <span class="taplink-arrow">›</span>
+        </a>
+
+        <!-- Кнопка 4: MAX-канал кондитерской -->
+        <a id="link-btn-max-channel" href="https://max.ru/join/rVKouI80PRp_A-6cqeyY62mq-_um0BP9w87l7Gnjhps" target="_blank" rel="noopener noreferrer" class="taplink-btn btn-max" style="display: none;">
+          <div class="taplink-btn-content">
+            <div class="taplink-icon">📢</div>
+            <div>
+              <div class="taplink-text-title">Наш MAX-канал</div>
+              <div id="link-sub-max-channel" class="taplink-text-sub">Канал кондитера в MAX: новинки и фото</div>
+            </div>
+          </div>
+          <span class="taplink-arrow">›</span>
+        </a>
+
+        <!-- Кнопка 5: Открыть витрину десертов -->
+        <button type="button" id="link-btn-showcase" class="taplink-btn btn-showcase" onclick="switchTab('showcase')">
           <div class="taplink-btn-content">
             <div class="taplink-icon">🍰</div>
             <div>
@@ -108,7 +132,7 @@
           <span class="taplink-arrow">›</span>
         </button>
 
-        <!-- Кнопка 4: Срочный заказ / Звонок (с анти-бот защитой) -->
+        <!-- Кнопка 6: Срочный заказ / Звонок (с анти-бот защитой) -->
         <button type="button" id="link-btn-phone" class="taplink-btn btn-urgent" style="display: none;" onclick="PhoneProtection.showModal()">
           <div class="taplink-btn-content">
             <div class="taplink-icon">📞</div>
@@ -186,67 +210,69 @@
        МОДАЛЬНОЕ ОКНО: ДЕТАЛЬНАЯ КАРТОЧКА ДЕСЕРТА
        ======================================================== -->
   <div id="product-modal" class="modal-overlay" onclick="closeProductModal()">
-    <div class="bottom-sheet" onclick="event.stopPropagation()">
+    <div class="bottom-sheet product-detail-sheet" onclick="event.stopPropagation()">
       <div class="sheet-drag-handle"></div>
       <button type="button" class="sheet-close-btn" onclick="closeProductModal()" aria-label="Закрыть">✕</button>
 
-      <div class="detail-img-wrap">
-        <img id="detail-modal-img" src="" alt="" class="detail-img" />
-      </div>
+      <div class="sheet-scroll-body">
+        <div class="detail-img-wrap">
+          <img id="detail-modal-img" src="" alt="" class="detail-img" />
+        </div>
 
-      <div class="modal-detail-content">
-        <div class="detail-info">
-          <div class="detail-header-row">
-            <h3 id="detail-modal-title" class="detail-title">Название десерта</h3>
-            <span id="detail-modal-price" class="detail-price">450 ₽</span>
+        <div class="modal-detail-content">
+          <div class="detail-info">
+            <div class="detail-header-row">
+              <h3 id="detail-modal-title" class="detail-title">Название десерта</h3>
+              <span id="detail-modal-price" class="detail-price">450 ₽</span>
+            </div>
+            <div id="detail-modal-weight" class="detail-weight">Вес: 110 г</div>
+
+            <p id="detail-modal-desc" class="detail-desc">Описание десерта</p>
+
+            <!-- Слои пирожного -->
+            <div id="detail-layers-wrap">
+              <h4 class="detail-section-title">Слои и текстура десерта:</h4>
+              <ul id="detail-modal-layers" class="detail-layers-list"></ul>
+            </div>
+
+            <!-- КБЖУ на 100 грамм -->
+            <h4 class="detail-section-title">Пищевая ценность (на 100 г):</h4>
+            <div class="nutrition-grid">
+              <div class="nutrition-item">
+                <div id="nutr-cal" class="val">285</div>
+                <div class="lbl">ккал</div>
+              </div>
+              <div class="nutrition-item">
+                <div id="nutr-prot" class="val">4.2 г</div>
+                <div class="lbl">белки</div>
+              </div>
+              <div class="nutrition-item">
+                <div id="nutr-fat" class="val">14.8 г</div>
+                <div class="lbl">жиры</div>
+              </div>
+              <div class="nutrition-item">
+                <div id="nutr-carb" class="val">33.5 г</div>
+                <div class="lbl">углеводы</div>
+              </div>
+            </div>
+
+            <!-- Состав -->
+            <h4 class="detail-section-title">Натуральный состав:</h4>
+            <p id="detail-modal-ingredients" style="font-size: 12px; color: var(--color-muted); line-height: 1.5; margin-bottom: 16px;"></p>
+
+            <!-- Действия: количество и кнопка добавления -->
+            <div class="detail-actions">
+              <div id="detail-qty-counter" class="qty-counter">
+                <button type="button" class="qty-btn" onclick="changeDetailQty(-1)">−</button>
+                <span id="detail-qty-val" class="qty-val">1</span>
+                <button type="button" class="qty-btn" onclick="changeDetailQty(1)">+</button>
+              </div>
+              <button id="btn-detail-add" type="button" class="btn-detail-add" onclick="addDetailToCart()">
+                <span id="btn-detail-add-text">Добавить в корзину • 450 ₽</span>
+              </button>
+            </div>
+
           </div>
-          <div id="detail-modal-weight" class="detail-weight">Вес: 110 г</div>
-
-          <p id="detail-modal-desc" class="detail-desc">Описание десерта</p>
-
-          <!-- Слои пирожного -->
-          <div id="detail-layers-wrap">
-            <h4 class="detail-section-title">Слои и текстура десерта:</h4>
-            <ul id="detail-modal-layers" class="detail-layers-list"></ul>
-          </div>
-
-          <!-- КБЖУ на 100 грамм -->
-          <h4 class="detail-section-title">Пищевая ценность (на 100 г):</h4>
-          <div class="nutrition-grid">
-            <div class="nutrition-item">
-              <div id="nutr-cal" class="val">285</div>
-              <div class="lbl">ккал</div>
-            </div>
-            <div class="nutrition-item">
-              <div id="nutr-prot" class="val">4.2 г</div>
-              <div class="lbl">белки</div>
-            </div>
-            <div class="nutrition-item">
-              <div id="nutr-fat" class="val">14.8 г</div>
-              <div class="lbl">жиры</div>
-            </div>
-            <div class="nutrition-item">
-              <div id="nutr-carb" class="val">33.5 г</div>
-              <div class="lbl">углеводы</div>
-            </div>
-          </div>
-
-          <!-- Состав -->
-          <h4 class="detail-section-title">Натуральный состав:</h4>
-          <p id="detail-modal-ingredients" style="font-size: 12px; color: var(--color-muted); line-height: 1.5; margin-bottom: 16px;"></p>
-
-          <!-- Действия: количество и кнопка добавления -->
-          <div class="detail-actions">
-            <div id="detail-qty-counter" class="qty-counter">
-              <button type="button" class="qty-btn" onclick="changeDetailQty(-1)">−</button>
-              <span id="detail-qty-val" class="qty-val">1</span>
-              <button type="button" class="qty-btn" onclick="changeDetailQty(1)">+</button>
-            </div>
-            <button id="btn-detail-add" type="button" class="btn-detail-add" onclick="addDetailToCart()">
-              <span id="btn-detail-add-text">Добавить в корзину • 450 ₽</span>
-            </button>
-          </div>
-
         </div>
       </div>
     </div>
@@ -260,104 +286,106 @@
       <div class="sheet-drag-handle"></div>
       <button type="button" class="sheet-close-btn" onclick="closeCart()" aria-label="Закрыть">✕</button>
 
-      <div class="cart-sheet-content">
-        <h3 class="cart-title">Ваш сладкий заказ</h3>
+      <div class="sheet-scroll-body">
+        <div class="cart-sheet-content">
+          <h3 class="cart-title">Ваш сладкий заказ</h3>
 
-        <!-- Пустая корзина -->
-        <div id="cart-empty-state" class="cart-empty-state">
-          <div class="cart-empty-icon">🍰</div>
-          <p style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Ваша корзина пока пуста</p>
-          <p style="font-size: 13px;">Выберите аппетитные корпусные пирожные или подарочный набор в витрине!</p>
-        </div>
-
-        <!-- Список добавленных десертов -->
-        <div id="cart-items-list" class="cart-items-list">
-          <!-- Генерируется из app.js -->
-        </div>
-
-        <!-- Форма оформления заказа -->
-        <div id="checkout-box" class="checkout-box">
-          <div class="checkout-box-title">
-            <span>📝</span> Детали для доставки
+          <!-- Пустая корзина -->
+          <div id="cart-empty-state" class="cart-empty-state">
+            <div class="cart-empty-icon">🍰</div>
+            <p style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Ваша корзина пока пуста</p>
+            <p style="font-size: 13px;">Выберите аппетитные корпусные пирожные или подарочный набор в витрине!</p>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="order-name">Ваше имя *</label>
-            <input type="text" id="order-name" class="form-input" placeholder="Например: Анастасия" required />
+          <!-- Список добавленных десертов -->
+          <div id="cart-items-list" class="cart-items-list">
+            <!-- Генерируется из app.js -->
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="order-phone">Телефон или ник для связи *</label>
-            <input type="text" id="order-phone" class="form-input" placeholder="+7 (999) 000-00-00 или @username" required />
-          </div>
-
-          <!-- Выбор канала связи -->
-          <div class="form-group">
-            <label class="form-label">Куда отправить заказ кондитеру?</label>
-            <div class="messenger-selector">
-              <label class="messenger-option selected" data-type="max">
-                <input type="radio" name="order-messenger" value="max" checked />
-                <span>💬 В MAX</span>
-              </label>
-              <label class="messenger-option" data-type="telegram">
-                <input type="radio" name="order-messenger" value="telegram" />
-                <span>✈️ В Telegram</span>
-              </label>
+          <!-- Форма оформления заказа -->
+          <div id="checkout-box" class="checkout-box">
+            <div class="checkout-box-title">
+              <span>📝</span> Детали для доставки
             </div>
-          </div>
 
-          <div class="form-row-2">
             <div class="form-group">
-              <label class="form-label" for="order-date">📅 Дата готовности</label>
-              <input type="date" id="order-date" class="form-input" />
-              <button type="button" id="btn-order-today" class="btn-today-pill" onclick="setOrderDateToday()">⚡ Срочно на сегодня</button>
+              <label class="form-label" for="order-name">Ваше имя *</label>
+              <input type="text" id="order-name" class="form-input" placeholder="Например: Анастасия" required />
             </div>
+
             <div class="form-group">
-              <label class="form-label" for="order-time">⏰ Время доставки</label>
-              <select id="order-time" class="form-select" onchange="toggleCustomTime(this.value)">
-                <option value="11:00 - 14:00">11:00 - 14:00</option>
-                <option value="14:00 - 18:00" selected>14:00 - 18:00</option>
-                <option value="18:00 - 21:00">18:00 - 21:00</option>
-                <option value="custom">🎯 Точное время...</option>
+              <label class="form-label" for="order-phone">Телефон или ник для связи *</label>
+              <input type="text" id="order-phone" class="form-input" placeholder="+7 (999) 000-00-00 или @username" required />
+            </div>
+
+            <!-- Выбор канала связи -->
+            <div class="form-group">
+              <label class="form-label">Куда отправить заказ кондитеру?</label>
+              <div class="messenger-selector">
+                <label class="messenger-option selected" data-type="max">
+                  <input type="radio" name="order-messenger" value="max" checked />
+                  <span>💬 В MAX</span>
+                </label>
+                <label class="messenger-option" data-type="telegram">
+                  <input type="radio" name="order-messenger" value="telegram" />
+                  <span>✈️ В Telegram</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="order-date">📅 Дата готовности</label>
+                <input type="date" id="order-date" class="form-input" />
+                <button type="button" id="btn-order-today" class="btn-today-pill" onclick="setOrderDateToday()">⚡ Срочно на сегодня</button>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="order-time">⏰ Время доставки</label>
+                <select id="order-time" class="form-select" onchange="toggleCustomTime(this.value)">
+                  <option value="11:00 - 14:00">11:00 - 14:00</option>
+                  <option value="14:00 - 18:00" selected>14:00 - 18:00</option>
+                  <option value="18:00 - 21:00">18:00 - 21:00</option>
+                  <option value="custom">🎯 Точное время...</option>
+                </select>
+                <input type="time" id="order-custom-time" class="form-input" style="display: none; margin-top: 6px;" value="15:00" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="order-delivery">Способ получения</label>
+              <select id="order-delivery" class="form-select" onchange="document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none'">
+                <option value="delivery" selected>🚚 Доставка курьером (Москва и МО)</option>
+                <option value="pickup">🚶 Самовывоз (м. Раменки)</option>
               </select>
-              <input type="time" id="order-custom-time" class="form-input" style="display: none; margin-top: 6px;" value="15:00" />
+            </div>
+
+            <div id="address-group" class="form-group">
+              <label class="form-label" for="order-address">Адрес доставки</label>
+              <input type="text" id="order-address" class="form-input" placeholder="Улица, дом, квартира/офис" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="order-comment">Пожелания / надпись на торте или открытке</label>
+              <textarea id="order-comment" class="form-textarea" rows="2" placeholder="Например: надпись «С Днём Рождения!», открытка с пожеланием или без сахара"></textarea>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="order-delivery">Способ получения</label>
-            <select id="order-delivery" class="form-select" onchange="document.getElementById('address-group').style.display = this.value === 'delivery' ? 'block' : 'none'">
-              <option value="delivery" selected>🚚 Доставка курьером (Москва и МО)</option>
-              <option value="pickup">🚶 Самовывоз (м. Раменки)</option>
-            </select>
+          <!-- Итоговая сумма -->
+          <div id="cart-summary" class="cart-summary">
+            <span style="font-weight: 600; color: var(--color-muted);">Сумма заказа:</span>
+            <span id="cart-total-price" class="cart-summary-total">0 ₽</span>
           </div>
 
-          <div id="address-group" class="form-group">
-            <label class="form-label" for="order-address">Адрес доставки</label>
-            <input type="text" id="order-address" class="form-input" placeholder="Улица, дом, квартира/офис" />
-          </div>
+          <!-- Кнопка отправки -->
+          <button id="btn-send-order" type="button" class="btn-send-order max-style" onclick="submitOrder()">
+            💬 Отправить заказ в MAX
+          </button>
 
-          <div class="form-group">
-            <label class="form-label" for="order-comment">Пожелания / надпись на торте или открытке</label>
-            <textarea id="order-comment" class="form-textarea" rows="2" placeholder="Например: надпись «С Днём Рождения!», открытка с пожеланием или без сахара"></textarea>
-          </div>
+          <p class="order-hint">
+            ✨ Заказ сразу откроется в вашем диалоге с кондитером Людой со всеми деталями.
+          </p>
+
         </div>
-
-        <!-- Итоговая сумма -->
-        <div id="cart-summary" class="cart-summary">
-          <span style="font-weight: 600; color: var(--color-muted);">Сумма заказа:</span>
-          <span id="cart-total-price" class="cart-summary-total">0 ₽</span>
-        </div>
-
-        <!-- Кнопка отправки -->
-        <button id="btn-send-order" type="button" class="btn-send-order max-style" onclick="submitOrder()">
-          💬 Отправить заказ в MAX
-        </button>
-
-        <p class="order-hint">
-          ✨ Заказ сразу откроется в вашем диалоге с кондитером Людой со всеми деталями.
-        </p>
-
       </div>
     </div>
   </div>
@@ -725,73 +753,95 @@
       <div class="sheet-drag-handle"></div>
       <button type="button" class="sheet-close-btn" onclick="AdminPanel.closeContactsModal()" aria-label="Закрыть">✕</button>
 
-      <div style="padding: 0 20px 32px;">
-        <h3 class="admin-sheet-title" style="margin-bottom: 8px;">📱 Контакты и мессенджеры</h3>
-        <p style="font-size: 12px; color: var(--color-muted); margin-bottom: 16px;">
-          Укажите свои ссылки для тестов или реальные контакты кондитерской.
-        </p>
+      <div class="sheet-scroll-body">
+        <div style="padding: 0 20px 32px;">
+          <h3 class="admin-sheet-title" style="margin-bottom: 8px;">📱 Контакты и кнопки на главной</h3>
+          <p style="font-size: 12px; color: var(--color-muted); margin-bottom: 16px;">
+            Включайте или отключайте кнопки на визитке и указывайте ссылки для связи с клиентами.
+          </p>
 
-        <!-- Telegram username -->
-        <div class="form-group">
-          <label class="form-label" for="setting-tg-user">Логин в Telegram (куда отправлять заказы)</label>
-          <input type="text" id="setting-tg-user" class="form-input" placeholder="например: mila_sladco" />
-          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
-            💡 <b>Где найти логин:</b> В приложении Telegram откройте <i>Настройки → Изменить профиль (или Настройки чатов) → Имя пользователя (@username)</i>.
-          </div>
-        </div>
+          <!-- СЕКЦИЯ: ЛИЧНЫЕ ЧАТЫ С КОНДИТЕРОМ -->
+          <div style="background: #FDFBF8; border: 1px solid var(--color-border); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+            <div style="font-weight: 700; font-size: 13px; color: var(--color-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span>💬</span> Личные сообщения для заказов
+            </div>
 
-        <!-- Telegram channel -->
-        <div class="form-group">
-          <label class="form-label" for="setting-tg-channel">Ссылка на Telegram-канал (кнопка в шапке)</label>
-          <input type="text" id="setting-tg-channel" class="form-input" placeholder="https://t.me/mila_sladco1 или ссылка-приглашение" />
-          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
-            📢 <b>Как получить ссылку:</b> Откройте ваш канал в Telegram → нажмите на имя канала вверху → <i>«Изменить» (значок карандаша) → «Тип канала»</i>. Скопируйте публичную ссылку (<code>https://t.me/...</code>) или ссылку-приглашение (<code>https://t.me/+...</code>).
-          </div>
-        </div>
-
-        <!-- MAX username -->
-        <div class="form-group">
-          <label class="form-label" for="setting-max-user">Логин / телефон в MAX Messenger</label>
-          <input type="text" id="setting-max-user" class="form-input" placeholder="например: mila_sladco или +79153181819" />
-          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
-            💡 <b>Где найти:</b> В приложении MAX откройте <i>Профиль / Настройки</i>. Укажите логин или привязанный номер телефона.
-          </div>
-        </div>
-
-        <!-- MAX channel -->
-        <div class="form-group">
-          <label class="form-label" for="setting-max-channel">Ссылка на канал или группу в MAX</label>
-          <input type="text" id="setting-max-channel" class="form-input" placeholder="https://max.ru/join/..." />
-          <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
-            📢 <b>Как получить ссылку:</b> В приложении MAX откройте канал или группу → нажмите на название вверху → <i>«Ссылка на канал» / «Пригласить по ссылке»</i> → «Скопировать ссылку».
-          </div>
-        </div>
-
-        <!-- Телефон -->
-        <div class="form-group">
-          <label class="form-label" for="setting-phone">Рабочий контактный номер телефона</label>
-          <input type="tel" id="setting-phone" class="form-input" placeholder="+7 (915) 318-18-19" />
-          <div style="font-size: 11px; color: #9A6700; margin-top: 4px; line-height: 1.4; background: #FFF8E6; padding: 8px 10px; border-radius: 8px; border: 1px solid #FFE29A;">
-            ⚠️ <b>Рекомендация:</b> Во избежание спама указывайте отдельный рабочий номер для заказов, а не личный семейный номер.
-          </div>
-        </div>
-
-        <!-- Защита от спам-ботов -->
-        <div class="form-group" style="background: #FAF7F2; padding: 12px; border-radius: 12px; border: 1px solid var(--color-border); margin-top: 10px;">
-          <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
-            <input type="checkbox" id="setting-show-phone" style="width: 20px; height: 20px; margin-top: 2px;" />
-            <div>
-              <div>Разрешить звонки с сайта (кнопка «Позвонить кондитеру»)</div>
-              <div style="font-size: 11px; color: var(--color-muted); font-weight: normal; margin-top: 3px; line-height: 1.4;">
-                🛡️ <b>Встроенная анти-бот защита:</b> номер скрыт от парсеров. Чтобы позвонить, гость нажимает кнопку и проходит быстрый человеческий тест (выбрать десерт среди иконок). Это блокирует роботов и автодозвонщиков.
+            <!-- Telegram direct chat -->
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                <input type="checkbox" id="setting-show-tg-direct" style="width: 18px; height: 18px;" />
+                <span>✈️ Кнопка «Написать в Telegram»</span>
+              </label>
+              <input type="text" id="setting-tg-user" class="form-input" placeholder="Логин в Telegram, например: mila_sladco" />
+              <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
+                💡 Ваш @username в Telegram, куда клиент напишет в один клик.
               </div>
             </div>
-          </label>
-        </div>
 
-        <button type="button" class="btn-send-order max-style" style="margin-top: 16px;" onclick="AdminPanel.saveContacts()">
-          💾 Сохранить контакты
-        </button>
+            <!-- MAX direct chat -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                <input type="checkbox" id="setting-show-max-direct" style="width: 18px; height: 18px;" />
+                <span>💬 Кнопка «Написать в MAX»</span>
+              </label>
+              <input type="text" id="setting-max-user" class="form-input" placeholder="Логин или телефон в MAX, например: mila_sladco" />
+              <div style="font-size: 11px; color: var(--color-muted); margin-top: 4px; line-height: 1.4;">
+                💡 Логин профиля или привязанный номер в MAX Messenger.
+              </div>
+            </div>
+          </div>
+
+          <!-- СЕКЦИЯ: КАНАЛЫ КОНДИТЕРСКОЙ -->
+          <div style="background: #FDFBF8; border: 1px solid var(--color-border); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+            <div style="font-weight: 700; font-size: 13px; color: var(--color-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span>📢</span> Каналы с новостями и анонсами
+            </div>
+
+            <!-- Telegram channel -->
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                <input type="checkbox" id="setting-show-tg-channel" style="width: 18px; height: 18px;" />
+                <span>📢 Кнопка «Наш Telegram-канал»</span>
+              </label>
+              <input type="text" id="setting-tg-channel" class="form-input" placeholder="https://t.me/mila_sladco1 или ссылка-приглашение" />
+            </div>
+
+            <!-- MAX channel -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                <input type="checkbox" id="setting-show-max-channel" style="width: 18px; height: 18px;" />
+                <span>📢 Кнопка «Наш MAX-канал»</span>
+              </label>
+              <input type="text" id="setting-max-channel" class="form-input" placeholder="https://max.ru/join/..." />
+            </div>
+          </div>
+
+          <!-- СЕКЦИЯ: ТЕЛЕФОН -->
+          <div class="form-group">
+            <label class="form-label" for="setting-phone">Рабочий контактный номер телефона</label>
+            <input type="tel" id="setting-phone" class="form-input" placeholder="+7 (915) 318-18-19" />
+            <div style="font-size: 11px; color: #9A6700; margin-top: 4px; line-height: 1.4; background: #FFF8E6; padding: 8px 10px; border-radius: 8px; border: 1px solid #FFE29A;">
+              ⚠️ <b>Рекомендация:</b> Во избежание спама указывайте отдельный рабочий номер для заказов, а не личный семейный номер.
+            </div>
+          </div>
+
+          <!-- Защита от спам-ботов -->
+          <div class="form-group" style="background: #FAF7F2; padding: 12px; border-radius: 12px; border: 1px solid var(--color-border); margin-top: 10px;">
+            <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;">
+              <input type="checkbox" id="setting-show-phone" style="width: 20px; height: 20px; margin-top: 2px;" />
+              <div>
+                <div>Разрешить звонки с сайта (кнопка «Позвонить кондитеру»)</div>
+                <div style="font-size: 11px; color: var(--color-muted); font-weight: normal; margin-top: 3px; line-height: 1.4;">
+                  🛡️ <b>Встроенная анти-бот защита:</b> номер скрыт от парсеров. Чтобы позвонить, гость нажимает кнопку и проходит быстрый человеческий тест (выбрать десерт среди иконок). Это блокирует роботов и автодозвонщиков.
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <button type="button" class="btn-send-order max-style" style="margin-top: 16px;" onclick="AdminPanel.saveContacts()">
+            💾 Сохранить контакты
+          </button>
+        </div>
       </div>
     </div>
   </div>

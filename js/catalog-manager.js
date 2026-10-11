@@ -242,6 +242,10 @@ const DEFAULT_PROFILE = {
   telegramChannelUrl: "https://t.me/mila_sladco1",
   maxUsername: "",
   maxChannelUrl: "https://max.ru/join/rVKouI80PRp_A-6cqeyY62mq-_um0BP9w87l7Gnjhps",
+  showTelegramDirect: true,
+  showMaxDirect: true,
+  showTelegramChannel: true,
+  showMaxChannel: false,
   hasSeenTour: false,
   pinHash: "2052782898"
 };

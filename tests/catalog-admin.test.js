@@ -144,11 +144,22 @@ test("CatalogManager: обновление контактов, мессендж�
   assert.strictEqual(defaultProf.telegramUsername, "");
   assert.strictEqual(defaultProf.maxUsername, "");
 
-  // Пользователь настраивает свои контакты для тестов
+  // По умолчанию кнопки личных чатов и TG-канала активны, MAX-канал выключен
+  assert.strictEqual(defaultProf.showTelegramDirect, true);
+  assert.strictEqual(defaultProf.showMaxDirect, true);
+  assert.strictEqual(defaultProf.showTelegramChannel, true);
+  assert.strictEqual(defaultProf.showMaxChannel, false);
+
+  // Пользователь настраивает свои контакты и тумблеры кнопок
   CatalogManager.updateProfile({
     telegramUsername: "test_tester",
     maxUsername: "test_tester_max",
     telegramChannelUrl: "https://t.me/test_channel",
+    maxChannelUrl: "https://max.ru/join/test_max_channel",
+    showTelegramDirect: true,
+    showMaxDirect: false, // скрываем MAX прямой чат
+    showTelegramChannel: false, // скрываем TG канал
+    showMaxChannel: true, // включаем MAX канал
     showPhone: true,
     phone: "+7 (999) 000-00-00",
     phoneClean: "+79990000000"
@@ -157,6 +168,10 @@ test("CatalogManager: обновление контактов, мессендж�
   const updated = CatalogManager.getProfile();
   assert.strictEqual(updated.telegramUsername, "test_tester");
   assert.strictEqual(updated.maxUsername, "test_tester_max");
+  assert.strictEqual(updated.showTelegramDirect, true);
+  assert.strictEqual(updated.showMaxDirect, false);
+  assert.strictEqual(updated.showTelegramChannel, false);
+  assert.strictEqual(updated.showMaxChannel, true);
   assert.strictEqual(updated.showPhone, true);
   assert.strictEqual(updated.phone, "+7 (999) 000-00-00");
   assert.strictEqual(updated.phoneClean, "+79990000000");
@@ -164,5 +179,9 @@ test("CatalogManager: обновление контактов, мессендж�
   // Сброс
   CatalogManager.resetProfile();
   assert.strictEqual(CatalogManager.getProfile().showPhone, false);
+  assert.strictEqual(CatalogManager.getProfile().showTelegramDirect, true);
+  assert.strictEqual(CatalogManager.getProfile().showMaxDirect, true);
+  assert.strictEqual(CatalogManager.getProfile().showTelegramChannel, true);
+  assert.strictEqual(CatalogManager.getProfile().showMaxChannel, false);
 });
 

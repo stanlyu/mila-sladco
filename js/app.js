@@ -215,6 +215,8 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("btn-detail-add-text").textContent = "Временно закончился";
     }
 
+    const scrollBody = productModal.querySelector(".sheet-scroll-body");
+    if (scrollBody) scrollBody.scrollTop = 0;
     productModal.classList.add("open");
   };
 
@@ -249,6 +251,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Управление Корзиной
   window.openCart = () => {
     renderCartItems();
+    const scrollBody = cartModal.querySelector(".sheet-scroll-body");
+    if (scrollBody) scrollBody.scrollTop = 0;
     cartModal.classList.add("open");
   };
 
@@ -491,25 +495,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Ссылки и кнопки в таплинке
+    // 1. Написать в MAX (личный чат)
     const maxBtn = document.getElementById("link-btn-max");
     if (maxBtn) {
+      maxBtn.style.display = (profile.showMaxDirect !== false) ? "flex" : "none";
       const cleanMax = (profile.maxUsername || "").trim().replace(/^@/, "");
-      if (cleanMax && cleanMax !== "none" && cleanMax !== "mila_sladco") {
+      if (cleanMax && cleanMax !== "none") {
         maxBtn.href = `https://max.ru/${cleanMax}`;
         maxBtn.onclick = null;
       } else {
         maxBtn.href = "javascript:void(0)";
         maxBtn.onclick = (e) => {
           e.preventDefault();
-          showToast("💡 Ссылку на MAX кондитер Люда укажет в своем кабинете");
+          showToast("💡 Логин в MAX кондитер Люда укажет в своем кабинете");
         };
       }
     }
 
+    // 2. Написать в Telegram (личный чат)
+    const tgDirectBtn = document.getElementById("link-btn-telegram-direct");
+    if (tgDirectBtn) {
+      tgDirectBtn.style.display = (profile.showTelegramDirect !== false) ? "flex" : "none";
+      const cleanTg = (profile.telegramUsername || "").trim().replace(/^@/, "");
+      if (cleanTg && cleanTg !== "none") {
+        tgDirectBtn.href = `https://t.me/${cleanTg}`;
+        tgDirectBtn.onclick = null;
+      } else {
+        tgDirectBtn.href = "javascript:void(0)";
+        tgDirectBtn.onclick = (e) => {
+          e.preventDefault();
+          showToast("💡 Логин в Telegram кондитер Люда укажет в своем кабинете");
+        };
+      }
+    }
+
+    // 3. Наш Telegram-канал
     const tgBtn = document.getElementById("link-btn-telegram");
     if (tgBtn) {
+      tgBtn.style.display = (profile.showTelegramChannel !== false) ? "flex" : "none";
       const tgChannel = (profile.telegramChannelUrl || "").trim();
-      if (tgChannel && tgChannel !== "none" && tgChannel !== "https://t.me/mila_sladco_cakes") {
+      if (tgChannel && tgChannel !== "none") {
         tgBtn.href = tgChannel;
         tgBtn.onclick = null;
       } else {
@@ -517,6 +542,23 @@ document.addEventListener("DOMContentLoaded", () => {
         tgBtn.onclick = (e) => {
           e.preventDefault();
           showToast("💡 Ссылку на Telegram-канал кондитер Люда укажет в кабинете");
+        };
+      }
+    }
+
+    // 4. Наш MAX-канал
+    const maxChanBtn = document.getElementById("link-btn-max-channel");
+    if (maxChanBtn) {
+      maxChanBtn.style.display = profile.showMaxChannel ? "flex" : "none";
+      const maxChannel = (profile.maxChannelUrl || "").trim();
+      if (maxChannel && maxChannel !== "none") {
+        maxChanBtn.href = maxChannel;
+        maxChanBtn.onclick = null;
+      } else {
+        maxChanBtn.href = "javascript:void(0)";
+        maxChanBtn.onclick = (e) => {
+          e.preventDefault();
+          showToast("💡 Ссылку на MAX-канал кондитер Люда укажет в кабинете");
         };
       }
     }

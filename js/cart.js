@@ -5,11 +5,39 @@ const Cart = {
   items: [],
   catalogSource: null,
   STORAGE_KEY: "mila_sladco_cart_v1",
+  STORAGE_TIME_KEY: "mila_sladco_cart_timestamp",
+  SESSION_KEY: "mila_sladco_cart_session_active",
+  SESSION_TTL_MS: 2 * 60 * 60 * 1000, // 2 часа актуальности корзины
 
   init(customCatalog = null) {
     if (customCatalog) {
       this.catalogSource = customCatalog;
     }
+
+    let isStale = false;
+    try {
+      if (typeof sessionStorage !== "undefined") {
+        if (!sessionStorage.getItem(this.SESSION_KEY)) {
+          // Новая вкладка или свежая сессия браузера — сбрасываем старую корзину
+          isStale = true;
+          sessionStorage.setItem(this.SESSION_KEY, "active");
+        }
+      }
+      if (typeof localStorage !== "undefined") {
+        const savedTime = parseInt(localStorage.getItem(this.STORAGE_TIME_KEY) || "0", 10);
+        if (savedTime && Date.now() - savedTime > this.SESSION_TTL_MS) {
+          isStale = true;
+        }
+      }
+    } catch (e) {
+      console.warn("Ошибка проверки сессии корзины", e);
+    }
+
+    if (isStale) {
+      this.clear();
+      return;
+    }
+
     try {
       if (typeof localStorage !== "undefined") {
         const saved = localStorage.getItem(this.STORAGE_KEY);
@@ -28,6 +56,10 @@ const Cart = {
     try {
       if (typeof localStorage !== "undefined") {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.items));
+        localStorage.setItem(this.STORAGE_TIME_KEY, Date.now().toString());
+      }
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem(this.SESSION_KEY, "active");
       }
     } catch (e) {
       console.warn("Не удалось сохранить корзину", e);
