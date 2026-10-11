@@ -218,8 +218,8 @@ const SHOP_INFO = {
   city: "Москва",
   metro: "м. Раменки / Доставка курьером",
   status: "Принимаем заказы на сегодня и предзаказы",
-  phone: "+7 (926) 880-18-19",
-  phoneClean: "+79268801819",
+  phone: "+7 (915) 318-18-19",
+  phoneClean: "+79153181819",
   telegramUsername: "mila_sladco",
   telegramChannel: "mila_sladco_cakes",
   telegramChannelUrl: "https://t.me/mila_sladco_cakes",
@@ -235,8 +235,8 @@ const DEFAULT_PROFILE = {
   owner: "Кондитер Люда",
   avatar: "assets/images/chef-mila.jpg",
   statusText: "Принимаем заказы на сегодня и предзаказы",
-  phone: "+7 (926) 880-18-19",
-  phoneClean: "+79268801819",
+  phone: "+7 (915) 318-18-19",
+  phoneClean: "+79153181819",
   hasSeenTour: false
 };
 
