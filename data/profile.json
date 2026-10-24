@@ -7,9 +7,9 @@
   "phone": "+7 (915) 318-18-19",
   "phoneClean": "+79153181819",
   "showPhone": false,
-  "telegramUsername": "",
+  "telegramUsername": "mila_sladco",
   "telegramChannelUrl": "https://t.me/mila_sladco1",
-  "maxUsername": "",
+  "maxUsername": "https://max.ru/u/f9LHodD0cOKZDXkiMsU-PRi8gjsZLPccnfB0ALyanKln5PF8svMD6lRVgg4",
   "maxChannelUrl": "https://max.ru/join/rVKouI80PRp_A-6cqeyY62mq-_um0BP9w87l7Gnjhps",
   "showTelegramDirect": true,
   "showMaxDirect": true,
@@ -17,5 +17,5 @@
   "showMaxChannel": false,
   "hasSeenTour": true,
   "pinHash": "2052782898",
-  "pickupAddress": "Москва, м. Раменки"
+  "pickupAddress": "Москва, ул. Братиславская 18. к. 2"
 }
